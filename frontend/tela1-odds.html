@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProbaBet — Lobby de Apostas ao Vivo (Tela 1)</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- BARRA DE NAVEGAÇÃO PRINCIPAL / TOPO -->
+  <!-- ========================================== -->
+  <header class="navbar">
+    <a href="tela1-odds.html" class="logo-area">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">Proba<span>Bet</span></div>
+    </a>
+
+    <div class="header-status-area">
+      <!-- Indicador do Status da Conexão WebSocket -->
+      <div class="ws-status-badge">
+        <span class="ws-status-dot" id="wsStatusDot"></span>
+        <span id="wsStatusText">Conectando ao WS...</span>
+      </div>
+
+      <!-- Card de Saldo Dinâmico [RF-01] -->
+      <div class="wallet-badge" id="walletBadge">
+        <div>
+          <div class="wallet-label">Carteira Fictícia</div>
+          <div class="wallet-amount" id="walletAmount">R$ 100,00</div>
+        </div>
+      </div>
+
+      <!-- Perfil do Apostador -->
+      <div class="user-profile">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <span id="userName">Arthur Borges</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- ABAS DAS 3 TELAS PRINCIPAIS DO PROFESSOR -->
+  <!-- ========================================== -->
+  <nav class="nav-tabs-bar">
+    <a href="tela1-odds.html" class="nav-tab active">
+      <span>⚽</span> Tela 1: Lobby de Odds ao Vivo
+      <span class="tab-badge">3 Jogos</span>
+    </a>
+    <a href="tela2-betslip.html" class="nav-tab">
+      <span>📋</span> Tela 2: Detalhes & Bet Slip
+    </a>
+    <a href="tela3-cashout.html" class="nav-tab">
+      <span>💳</span> Tela 3: Carteira & Cash Out
+    </a>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- CONTEÚDO PRINCIPAL (GRID) -->
+  <!-- ========================================== -->
+  <main class="main-container">
+    
+    <!-- COLUNA PRINCIPAL: LOBBY DE JOGOS -->
+    <section class="matches-column">
+
+      <!-- BANNER INFORMATIVO DE ETAPAS -->
+      <div class="status-banner">
+        <div class="status-info">
+          <h2>⚡ Plataforma em Tempo Real Ativa</h2>
+          <p>WebSocket Full-Duplex conectado com saldo inicial de <strong>R$ 100,00</strong> vinculado à sua sessão ([RF-01]).</p>
+        </div>
+        <div class="badge-etapas">Etapas 1 a 7 Concluídas</div>
+      </div>
+
+      <!-- CABEÇALHO DA SEÇÃO DE JOGOS -->
+      <div class="section-header">
+        <div class="section-title">
+          <span>🔥</span> Partidas ao Vivo no Momento
+          <span class="live-pill">AO VIVO</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-dim);">
+          Mercado Principal: <strong>Resultado Final (1X2)</strong>
+        </div>
+      </div>
+
+      <!-- LISTA DE JOGOS AO VIVO -->
+      <div class="matches-list" id="matchesList">
+        
+        <!-- JOGO 1: FLAMENGO X PALMEIRAS -->
+        <article class="match-card" data-match-id="1">
+          <div class="match-header">
+            <div class="match-sport-league">
+              <span>⚽</span> Futebol — Brasileirão Série A
+            </div>
+            <div class="match-time">⏱️ 18' 1T</div>
+          </div>
+          <div class="match-body">
+            <div class="teams-container">
+              <div class="team-row">
+                <span>Flamengo</span>
+                <span class="team-score" id="scoreCasa-1">0</span>
+              </div>
+              <div class="team-row">
+                <span>Palmeiras</span>
+                <span class="team-score" id="scoreFora-1">0</span>
+              </div>
+            </div>
+            <!-- Mercados 1X2 -->
+            <div class="odds-group">
+              <button class="odd-btn" onclick="selectOdd(1, 'Flamengo vs Palmeiras', '1X2', 'CASA', 2.10, this)">
+                <span class="odd-label">1</span>
+                <span class="odd-val" id="odd-1-CASA">2.10</span>
+              </button>
+              <button class="odd-btn" onclick="selectOdd(1, 'Flamengo vs Palmeiras', '1X2', 'EMPATE', 3.25, this)">
+                <span class="odd-label">X</span>
+                <span class="odd-val" id="odd-1-EMPATE">3.25</span>
+              </button>
+              <button class="odd-btn" onclick="selectOdd(1, 'Flamengo vs Palmeiras', '1X2', 'FORA', 3.40, this)">
+                <span class="odd-label">2</span>
+                <span class="odd-val" id="odd-1-FORA">3.40</span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- JOGO 2: REAL MADRID X BARCELONA -->
+        <article class="match-card" data-match-id="2">
+          <div class="match-header">
+            <div class="match-sport-league">
+              <span>⚽</span> Futebol — La Liga El Clásico
+            </div>
+            <div class="match-time">⏱️ 42' 1T</div>
+          </div>
+          <div class="match-body">
+            <div class="teams-container">
+              <div class="team-row">
+                <span>Real Madrid</span>
+                <span class="team-score" id="scoreCasa-2">1</span>
+              </div>
+              <div class="team-row">
+                <span>Barcelona</span>
+                <span class="team-score" id="scoreFora-2">1</span>
+              </div>
+            </div>
+            <!-- Mercados 1X2 -->
+            <div class="odds-group">
+              <button class="odd-btn" onclick="selectOdd(2, 'Real Madrid vs Barcelona', '1X2', 'CASA', 2.45, this)">
+                <span class="odd-label">1</span>
+                <span class="odd-val" id="odd-2-CASA">2.45</span>
+              </button>
+              <button class="odd-btn" onclick="selectOdd(2, 'Real Madrid vs Barcelona', '1X2', 'EMPATE', 2.90, this)">
+                <span class="odd-label">X</span>
+                <span class="odd-val" id="odd-2-EMPATE">2.90</span>
+              </button>
+              <button class="odd-btn" onclick="selectOdd(2, 'Real Madrid vs Barcelona', '1X2', 'FORA', 2.80, this)">
+                <span class="odd-label">2</span>
+                <span class="odd-val" id="odd-2-FORA">2.80</span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+        <!-- JOGO 3: LAKERS X CELTICS -->
+        <article class="match-card" data-match-id="3">
+          <div class="match-header">
+            <div class="match-sport-league">
+              <span>🏀</span> Basquete — NBA Temporada Regular
+            </div>
+            <div class="match-time">⏱️ 32' 3Q</div>
+          </div>
+          <div class="match-body">
+            <div class="teams-container">
+              <div class="team-row">
+                <span>LA Lakers</span>
+                <span class="team-score" id="scoreCasa-3">85</span>
+              </div>
+              <div class="team-row">
+                <span>Boston Celtics</span>
+                <span class="team-score" id="scoreFora-3">82</span>
+              </div>
+            </div>
+            <!-- Mercados 1X2 -->
+            <div class="odds-group">
+              <button class="odd-btn" onclick="selectOdd(3, 'LA Lakers vs Boston Celtics', '1X2', 'CASA', 2.15, this)">
+                <span class="odd-label">1</span>
+                <span class="odd-val" id="odd-3-CASA">2.15</span>
+              </button>
+              <button class="odd-btn" onclick="selectOdd(3, 'LA Lakers vs Boston Celtics', '1X2', 'FORA', 1.70, this)">
+                <span class="odd-label">2</span>
+                <span class="odd-val" id="odd-3-FORA">1.70</span>
+              </button>
+            </div>
+          </div>
+        </article>
+
+      </div>
+
+      <!-- FEED DO CONSOLE WEBSOCKET EM TEMPO REAL -->
+      <div class="events-console">
+        <div class="console-header">
+          <span>📡 Feed de Eventos WebSocket em Tempo Real</span>
+          <span style="font-size: 0.72rem; color: var(--accent-green);">Live Stream</span>
+        </div>
+        <div class="console-body" id="consoleBody">
+          <!-- Linhas adicionadas dinamicamente pelo websocket.js -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUNA LATERAL: CADERNETA DE APOSTAS (BET SLIP - TELA 2) -->
+    <aside class="sidebar-column">
+      <div class="betslip-card">
+        <div class="betslip-header">
+          <div class="betslip-title">
+            <span>🎟️</span> Caderneta de Apostas
+          </div>
+          <div class="betslip-count" id="betslipCount">0</div>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div class="betslip-empty-state" id="betslipEmpty">
+          <div class="betslip-empty-icon">👈</div>
+          <p>Selecione uma cotação (Odd) em qualquer jogo para montar seu bilhete.</p>
+        </div>
+
+        <!-- Conteúdo quando há seleção -->
+        <div id="betslipContent" style="display: none;">
+          <div class="betslip-selected-item">
+            <div class="betslip-item-header">
+              <span class="betslip-item-match" id="betslipMatchName">-</span>
+              <button class="betslip-remove-btn" onclick="clearBetSlip()" title="Remover seleção">✕</button>
+            </div>
+            <div class="betslip-item-market">
+              <span id="betslipSelection">-</span>
+              <span id="betslipOdd" style="color: var(--accent-gold); font-size: 1.1rem;">-</span>
+            </div>
+          </div>
+
+          <div class="betslip-inputs">
+            <label class="input-label">Valor da Aposta</label>
+            <div class="stake-input-wrapper">
+              <span class="stake-currency-prefix">R$</span>
+              <input type="number" id="stakeInput" class="stake-input" value="20" min="1" max="100" step="1" oninput="calculateReturn()">
+            </div>
+
+            <div class="potential-return-row">
+              <span style="color: var(--text-muted); font-size: 0.85rem;">Retorno Potencial:</span>
+              <span class="potential-return-val" id="potentialReturn">R$ 0,00</span>
+            </div>
+
+            <button class="btn-place-bet" id="btnPlaceBet" onclick="mockPlaceBet()">
+              Confirmar Aposta
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- SCRIPTS -->
+  <script src="js/websocket.js"></script>
+  <script>
+    let currentSelection = null;
+
+    function selectOdd(matchId, matchName, market, option, odd, buttonEl) {
+      // Remove estilo de seleção anterior
+      document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
+      buttonEl.classList.add('selected');
+
+      currentSelection = { matchId, matchName, market, option, odd };
+
+      document.getElementById('betslipEmpty').style.display = 'none';
+      document.getElementById('betslipContent').style.display = 'block';
+      document.getElementById('betslipCount').textContent = '1';
+
+      document.getElementById('betslipMatchName').textContent = matchName;
+      document.getElementById('betslipSelection').textContent = `${market}: ${option}`;
+      document.getElementById('betslipOdd').textContent = `@ ${odd.toFixed(2)}`;
+
+      calculateReturn();
+    }
+
+    function clearBetSlip() {
+      currentSelection = null;
+      document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('betslipEmpty').style.display = 'block';
+      document.getElementById('betslipContent').style.display = 'none';
+      document.getElementById('betslipCount').textContent = '0';
+    }
+
+    function calculateReturn() {
+      if (!currentSelection) return;
+      const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
+      const potential = stake * currentSelection.odd;
+      document.getElementById('potentialReturn').textContent = `R$ ${potential.toFixed(2)}`;
+    }
+
+    function mockPlaceBet() {
+      if (!currentSelection) return;
+      const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
+      logEvent('BET_SLIP', `Aposta preparada no valor de R$ ${stake.toFixed(2)} (@ ${currentSelection.odd}). (Será processada via PLACE_BET na Etapa 10)`, 'ev-green');
+      alert(`Aposta de R$ ${stake.toFixed(2)} selecionada com sucesso! O envio do evento PLACE_BET pelo WebSocket será ativado na Etapa 10.`);
+    }
+  </script>
+</body>
+</html>
