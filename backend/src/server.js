@@ -2,9 +2,9 @@ const http = require('http');
 const path = require('path');
 const express = require('express');
 const cors = require('cors');
-const { WebSocketServer } = require('ws');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
 const db = require('./database');
+const { initWebSocketServer, getConnectedClientsCount } = require('./websocket');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,6 +24,10 @@ app.get('/api/health', async (req, res) => {
     status: 'OK',
     message: 'Servidor ProbaBet Backend ativo',
     timestamp: new Date().toISOString(),
+    websocket: {
+      status: 'active',
+      connectedClients: getConnectedClientsCount()
+    },
     database: {
       status: dbStatus.success ? 'connected' : 'disconnected',
       details: dbStatus.success ? { database: dbStatus.database } : { error: dbStatus.error }
@@ -34,37 +38,8 @@ app.get('/api/health', async (req, res) => {
 // Criação do servidor HTTP unificado
 const server = http.createServer(app);
 
-// Inicialização do Servidor WebSocket acoplado ao servidor HTTP
-const wss = new WebSocketServer({ server });
-
-wss.on('connection', (ws, req) => {
-  const clientIp = req.socket.remoteAddress;
-  console.log(`[WebSocket] Novo cliente conectado: ${clientIp}`);
-
-  // Enviar mensagem de boas-vindas / handshake básico
-  ws.send(JSON.stringify({
-    event: 'CONNECTION_ESTABLISHED',
-    message: 'Conectado ao servidor ProbaBet WebSocket com sucesso!',
-    timestamp: new Date().toISOString()
-  }));
-
-  ws.on('message', (data) => {
-    try {
-      const message = JSON.parse(data.toString());
-      console.log('[WebSocket] Mensagem recebida:', message);
-    } catch (err) {
-      console.error('[WebSocket] Erro ao processar payload JSON:', err.message);
-    }
-  });
-
-  ws.on('close', () => {
-    console.log(`[WebSocket] Cliente desconectado: ${clientIp}`);
-  });
-
-  ws.on('error', (err) => {
-    console.error(`[WebSocket] Erro na conexão com cliente: ${err.message}`);
-  });
-});
+// Inicialização do Servidor WebSocket modular acoplado ao servidor HTTP
+const wss = initWebSocketServer(server);
 
 // Inicialização do servidor
 server.listen(PORT, async () => {
