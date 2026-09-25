@@ -4,6 +4,7 @@ const express = require('express');
 const cors = require('cors');
 const { WebSocketServer } = require('ws');
 require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const db = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -17,11 +18,16 @@ const frontendPath = path.join(__dirname, '../../frontend');
 app.use(express.static(frontendPath));
 
 // Rota de verificação de integridade (Healthcheck)
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+  const dbStatus = await db.testConnection();
   res.json({
     status: 'OK',
     message: 'Servidor ProbaBet Backend ativo',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    database: {
+      status: dbStatus.success ? 'connected' : 'disconnected',
+      details: dbStatus.success ? { database: dbStatus.database } : { error: dbStatus.error }
+    }
   });
 });
 
@@ -61,10 +67,20 @@ wss.on('connection', (ws, req) => {
 });
 
 // Inicialização do servidor
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`====================================================`);
   console.log(`  ProbaBet - Servidor de Apostas em Tempo Real`);
   console.log(`  HTTP Server:      http://localhost:${PORT}`);
   console.log(`  WebSocket Server: ws://localhost:${PORT}`);
   console.log(`====================================================`);
+
+  // Verificação de conectividade com PostgreSQL no startup
+  const dbStatus = await db.testConnection();
+  if (dbStatus.success) {
+    console.log(`[PostgreSQL] Conectado ao banco "${dbStatus.database}" com sucesso.`);
+  } else {
+    console.warn(`[PostgreSQL] Aviso: Conexão pendente ou banco offline (${dbStatus.error}).`);
+    console.warn(`[PostgreSQL] O servidor HTTP/WebSocket continua ativo.`);
+  }
 });
+
