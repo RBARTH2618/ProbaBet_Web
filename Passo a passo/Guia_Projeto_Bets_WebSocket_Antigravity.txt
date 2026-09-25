@@ -1,0 +1,1210 @@
+GUIA DE DESENVOLVIMENTO — PLATAFORMA DE BETS EM TEMPO REAL COM WEBSOCKET
+Projeto da disciplina: Desenvolvimento de Software para Web
+Professor: Me. Sergio Souza Novak
+Integrantes: Arthur Borges Rodrigues e João Lucas Tavares Silva
+
+============================================================
+1. OBJETIVO DESTE ARQUIVO
+============================================================
+
+Este arquivo deve ser utilizado como fonte de orientação pelo Antigravity durante o desenvolvimento do projeto.
+
+O objetivo é construir, passo a passo, uma plataforma web de apostas esportivas fictícias em tempo real, utilizando WebSocket para comunicação bidirecional, PostgreSQL como banco de dados, Node.js como backend e HTML/CSS/JavaScript no frontend.
+
+IMPORTANTE:
+- Não desenvolver o sistema inteiro de uma vez.
+- Trabalhar por etapas pequenas e testáveis.
+- Antes de implementar uma nova etapa, verificar se a anterior está funcionando.
+- Preservar os nomes dos eventos, campos e regras definidos no documento do professor.
+- O código deve ser simples o suficiente para que os integrantes consigam explicar o funcionamento durante uma arguição.
+- Evitar adicionar tecnologias desnecessárias.
+- O backend principal será Node.js. Python não será usado como backend principal.
+- O projeto deve ser desenvolvido de forma incremental, com commits frequentes no GitHub.
+
+============================================================
+2. DOCUMENTO DO PROFESSOR — REQUISITOS PRINCIPAIS
+============================================================
+
+O professor especificou uma plataforma de apostas esportivas em tempo real baseada em WebSocket.
+
+Cada participante recebe saldo fictício inicial de R$ 100,00.
+
+O sistema precisa permitir:
+- visualizar partidas ao vivo;
+- visualizar e acompanhar odds;
+- selecionar apostas;
+- enviar apostas pelo WebSocket;
+- debitar o saldo;
+- acompanhar apostas abertas;
+- calcular e atualizar Cash Out;
+- executar Cash Out;
+- receber notificações de gols/eventos;
+- suspender mercados em eventos decisivos;
+- liquidar automaticamente apostas vencedoras;
+- atualizar o saldo;
+- exibir ranking da sessão.
+
+O documento define os seguintes requisitos funcionais:
+
+RF-01 — Atribuição de Saldo Fictício Inicial
+Ao estabelecer a conexão WebSocket, o servidor deve vincular à sessão do apostador um saldo fictício inicial de R$ 100,00 e enviar a confirmação da carteira no evento inicial de handshake.
+
+RF-02 — Transmissão Dinâmica de Odds
+O backend deve simular a partida ao vivo e atualizar periodicamente, aproximadamente a cada 2 a 3 segundos, as cotações dos mercados, transmitindo o evento ODDS_UPDATE em JSON para todos os clientes conectados.
+
+Mercados mencionados no documento:
+- 1X2
+- Próximo Gol
+- Total de Gols
+
+RF-03 — Submissão e Validação de Apostas
+O cliente deve enviar:
+- ID da partida;
+- mercado escolhido;
+- opção selecionada;
+- odd aceita;
+- valor da aposta em reais.
+
+O servidor deve:
+- verificar o saldo;
+- debitar o valor atomicamente;
+- registrar o bilhete;
+- emitir BET_CONFIRMED.
+
+RF-04 — Cálculo e Atualização de Cash Out
+Durante a partida, o servidor deve recalcular continuamente o valor de Cash Out de cada aposta ativa com base na situação/probabilidade instantânea e transmitir o valor atualizado pelo WebSocket.
+
+RF-05 — Processamento de CASH_OUT
+Quando o usuário clicar no botão de Cash Out:
+- o navegador envia CASH_OUT;
+- o servidor recebe o ID do bilhete;
+- valida a situação;
+- encerra imediatamente a aposta ativa;
+- credita o valor acordado;
+- responde com CASH_OUT_CONFIRMED.
+
+RF-06 — Notificação Instantânea de Eventos do Jogo
+Quando ocorrer um evento decisivo, como Gol ou Cartão Vermelho:
+- o servidor envia um broadcast prioritário;
+- mercados afetados são temporariamente congelados;
+- a interface exibe um banner/pop-up;
+- deve haver sinal sonoro;
+- os mercados são atualizados posteriormente.
+
+RF-07 — Liquidação Automática
+Ao término da partida ou encerramento do mercado:
+- apostas abertas devem ser avaliadas;
+- apostas vencedoras devem receber o retorno (Valor Apostado x Odd);
+- ganhos devem ser creditados no saldo;
+- deve ser emitido BALANCE_UPDATE.
+
+RF-08 — Painel do Apostador e Ranking
+O frontend deve apresentar:
+- saldo atualizado;
+- apostas ativas;
+- botão de Cash Out;
+- ranking em tempo real com os maiores saldos da sessão.
+
+============================================================
+3. REQUISITOS NÃO FUNCIONAIS
+============================================================
+
+RNF-01 — Prevenção de Race Condition no Cash Out
+O backend deve usar mecanismos de concorrência/trava atômica. Caso um gol ocorra no mesmo instante ou praticamente junto de uma solicitação de Cash Out, as operações não podem resultar em uma liquidação inconsistente ou pagamento duplicado.
+
+RNF-02 — Integridade e Saldo Não Negativo
+Nenhuma aposta/transação pode deixar o saldo negativo. O backend deve rejeitar qualquer operação cujo valor seja maior que o saldo atual.
+
+RNF-03 — Eficiência e Baixa Latência
+As atualizações e comandos devem usar estruturas JSON compactas via WebSocket. O requisito do professor menciona tempo de resposta inferior a 100 ms.
+
+============================================================
+4. TECNOLOGIAS DEFINIDAS PARA O PROJETO
+============================================================
+
+Frontend:
+- HTML
+- CSS
+- JavaScript
+
+Backend:
+- Node.js
+- WebSocket
+
+Banco de dados:
+- PostgreSQL
+
+Ferramenta de desenvolvimento:
+- Antigravity
+
+Versionamento:
+- Git
+- GitHub
+
+Observação:
+Python pode ser utilizado futuramente apenas em alguma ferramenta auxiliar, se houver necessidade, mas não será usado como backend principal. O backend principal deve permanecer em Node.js para manter o projeto simples e adequado ao foco em WebSocket.
+
+============================================================
+5. ARQUITETURA PROPOSTA
+============================================================
+
+A arquitetura inicial deve seguir esta ideia:
+
+Navegador
+    |
+    | WebSocket / JSON
+    v
+Backend Node.js
+    |
+    +-- Motor da Partida
+    +-- Motor de Odds
+    +-- Sistema de Apostas
+    +-- Sistema de Cash Out
+    +-- Sistema de Liquidação
+    +-- Ranking
+    |
+    v
+PostgreSQL
+
+Fluxo geral:
+
+Frontend HTML/CSS/JavaScript
+        |
+        v
+WebSocket
+        |
+        v
+Servidor Node.js
+        |
+        v
+PostgreSQL
+
+Evitar criar camadas adicionais sem necessidade.
+
+============================================================
+6. ESTRUTURA INICIAL DO REPOSITÓRIO
+============================================================
+
+Nome sugerido do repositório:
+
+bets-websocket
+
+Estrutura inicial:
+
+bets-websocket/
+|
+|-- backend/
+|
+|-- frontend/
+|
+|-- database/
+|
+|-- docs/
+|
+|-- tests/
+|
+|-- .gitignore
+|-- README.md
+|-- package.json
+|-- ...
+
+Estrutura sugerida posteriormente para o backend:
+
+backend/
+|
+|-- src/
+|   |
+|   |-- server.js
+|   |
+|   |-- websocket/
+|   |
+|   |-- services/
+|   |
+|   |-- models/
+|   |
+|   |-- database/
+|   |
+|   |-- utils/
+|
+|-- package.json
+
+Estrutura sugerida para o frontend:
+
+frontend/
+|
+|-- tela1-odds.html
+|-- tela2-betslip.html
+|-- tela3-cashout.html
+|
+|-- css/
+|   |
+|   |-- style.css
+|
+|-- js/
+    |
+    |-- websocket.js
+    |-- odds.js
+    |-- betslip.js
+    |-- cashout.js
+
+Estrutura sugerida para banco/documentação:
+
+database/
+|
+|-- 01_create_database.sql
+|-- 02_create_tables.sql
+|-- 03_constraints.sql
+|-- 04_seed.sql
+
+docs/
+|
+|-- relatorio/
+|-- diagramas/
+|-- apresentacao/
+
+============================================================
+7. ESTRATÉGIA DE DESENVOLVIMENTO
+============================================================
+
+NÃO pedir ao Antigravity para criar o sistema completo de uma vez.
+
+O desenvolvimento deve acontecer em pequenas etapas.
+
+Sequência principal:
+
+1. Criar repositório.
+2. Criar estrutura de pastas.
+3. Configurar Node.js.
+4. Configurar PostgreSQL.
+5. Criar banco e tabelas.
+6. Criar servidor WebSocket.
+7. Implementar conexão e saldo inicial.
+8. Implementar simulador de partida.
+9. Implementar atualização de odds.
+10. Implementar PLACE_BET.
+11. Implementar Cash Out.
+12. Implementar GOAL e suspensão.
+13. Implementar liquidação.
+14. Implementar ranking.
+15. Criar frontend.
+16. Integrar frontend e backend.
+17. Fazer testes.
+18. Preparar relatório.
+19. Preparar roteiro de arguição.
+
+A cada etapa:
+- implementar;
+- testar;
+- corrigir;
+- fazer commit;
+- somente então avançar.
+
+============================================================
+8. GIT E GITHUB
+============================================================
+
+O GitHub será utilizado para versionamento e para acompanhar a evolução do projeto.
+
+Branches sugeridas:
+
+main
+develop
+
+Opcionalmente cada integrante pode trabalhar em uma branch própria, por exemplo:
+
+feature/backend
+feature/frontend
+
+ou:
+
+feature/nome-da-tarefa
+
+Commits sugeridos:
+
+feat: criar estrutura inicial
+feat: criar banco de dados
+feat: implementar servidor websocket
+feat: implementar saldo inicial
+feat: implementar simulador de partida
+feat: implementar odds
+feat: implementar place bet
+feat: implementar cash out
+feat: implementar goal
+feat: implementar liquidacao
+feat: criar lobby
+feat: criar bet slip
+feat: criar carteira
+feat: criar ranking
+fix: corrigir validacao de saldo
+fix: corrigir concorrencia no cash out
+
+Os commits devem ser objetivos e descrever uma alteração real.
+
+============================================================
+9. BANCO DE DADOS
+============================================================
+
+O professor especificou cinco entidades principais:
+
+APOSTADOR
+PARTIDA_ESPORTIVA
+MERCADO_ODD
+BILHETE_APOSTA
+TRANSACAO_CASHOUT
+
+Relacionamentos:
+
+PARTIDA_ESPORTIVA 1:N MERCADO_ODD
+
+APOSTADOR 1:N BILHETE_APOSTA
+
+MERCADO_ODD 1:N BILHETE_APOSTA
+
+BILHETE_APOSTA 1:1 TRANSACAO_CASHOUT
+
+Detalhamento:
+
+APOSTADOR
+- id_apostador: INT, PK
+- cpf_usuario: VARCHAR(14)
+- nome_completo: VARCHAR(100)
+- saldo_ficticio: DECIMAL(10,2)
+- data_cadastro: TIMESTAMP
+
+PARTIDA_ESPORTIVA
+- id_partida: INT, PK
+- modalidade_esportiva: VARCHAR(40)
+- time_casa: VARCHAR(60)
+- time_fora: VARCHAR(60)
+- placar_casa: INT
+- placar_fora: INT
+- minuto_jogo: INT
+- status_partida: VARCHAR(20)
+
+Status mencionados:
+AO_VIVO
+ENCERRADA
+SUSPENSA
+
+MERCADO_ODD
+- id_mercado: INT, PK
+- id_partida: INT, FK
+- nome_mercado: VARCHAR(50)
+- opcao_selecao: VARCHAR(30)
+- cotacao_odd_atual: DECIMAL(6,2)
+- ativo: BOOLEAN
+
+Exemplos:
+1X2
+PROXIMO_GOL
+CASA
+EMPATE
+FORA
+
+BILHETE_APOSTA
+- id_aposta: INT, PK
+- id_apostador: INT, FK
+- id_mercado: INT, FK
+- valor_apostado: DECIMAL(10,2)
+- odd_momento: DECIMAL(6,2)
+- retorno_potencial: DECIMAL(10,2)
+- status_aposta: VARCHAR(20)
+- data_hora_aposta: TIMESTAMP
+
+Status mencionados:
+ATIVA
+GREEN
+RED
+CASH_OUT
+
+TRANSACAO_CASHOUT
+- id_cashout: INT, PK
+- id_aposta: INT, FK
+- valor_resgate_oferecido: DECIMAL(10,2)
+- valor_resgatado: DECIMAL(10,2)
+- timestamp_efetivacao: TIMESTAMP
+
+ATENÇÃO:
+Não inventar outro modelo inicial. Usar o modelo do professor como base e adaptar apenas quando necessário e devidamente justificado.
+
+============================================================
+10. SALDO INICIAL
+============================================================
+
+Ao estabelecer a conexão WebSocket:
+- criar/vincular a sessão do apostador;
+- saldo inicial = R$ 100,00;
+- enviar confirmação do saldo.
+
+Fluxo:
+
+Cliente conecta
+    ↓
+Servidor aceita
+    ↓
+Sessão criada/vinculada
+    ↓
+Saldo = R$100,00
+    ↓
+Cliente recebe atualização de saldo
+
+Esse será um dos primeiros recursos a serem implementados.
+
+============================================================
+11. WEBSOCKET
+============================================================
+
+O WebSocket é o núcleo do projeto.
+
+Comunicação:
+
+Cliente <------ WebSocket ------> Servidor
+
+Eventos enviados pelo cliente:
+- PLACE_BET
+- CASH_OUT
+
+Eventos enviados pelo servidor:
+- ODDS_UPDATE
+- BET_CONFIRMED
+- CASH_OUT_CONFIRMED
+- BALANCE_UPDATE
+- GOAL
+
+Os dados devem trafegar em JSON.
+
+Exemplo PLACE_BET:
+
+{
+  "type": "PLACE_BET",
+  "matchId": 15,
+  "mercadoId": "VENCEDOR_1X2",
+  "selecao": "CASA",
+  "odd": 1.90,
+  "valor": 20.00
+}
+
+Exemplo CASH_OUT:
+
+{
+  "type": "CASH_OUT",
+  "betId": 1032,
+  "matchId": 15,
+  "requestedValue": 29.50
+}
+
+Exemplo conceitual de ODDS_UPDATE:
+
+{
+  "event": "ODDS_UPDATE",
+  "matchId": 15,
+  "odds": {
+    "CASA": 1.90,
+    "EMPATE": 3.20,
+    "FORA": 4.10
+  },
+  "timestamp": "..."
+}
+
+Manter os nomes definidos pelo professor.
+
+============================================================
+12. MOTOR DA PARTIDA
+============================================================
+
+Criar um simulador fictício.
+
+Não é necessário criar um jogo de futebol completo.
+
+Objetivo:
+- controlar o tempo da partida;
+- alterar placar;
+- gerar eventos;
+- gerar mudanças nas odds;
+- suspender e liberar mercados.
+
+Fluxo conceitual:
+
+Partida inicia
+    ↓
+tempo avança
+    ↓
+odds são alteradas
+    ↓
+ODDS_UPDATE
+    ↓
+eventualmente ocorre GOAL
+    ↓
+mercados afetados são suspensos
+    ↓
+placar é atualizado
+    ↓
+odds são recalculadas
+    ↓
+mercados são reabertos
+
+As odds devem ser atualizadas aproximadamente a cada 2 ou 3 segundos, conforme a especificação.
+
+Não buscar realismo matemático excessivo. O objetivo principal é demonstrar o funcionamento do WebSocket e das regras do sistema.
+
+============================================================
+13. CÁLCULO DO RETORNO POTENCIAL
+============================================================
+
+A regra básica pode ser:
+
+retorno potencial = valor apostado x odd
+
+Exemplo:
+
+valor = R$50,00
+odd = 1,95
+
+retorno potencial = R$97,50
+
+O valor deve aparecer instantaneamente no Bet Slip.
+
+============================================================
+14. CÁLCULO DO CASH OUT
+============================================================
+
+O professor exige um valor de Cash Out recalculado continuamente.
+
+Não é necessário criar um algoritmo profissional de apostas.
+
+Podemos trabalhar inicialmente com uma regra simples e claramente documentada.
+
+Exemplo:
+
+valor apostado = R$20,00
+odd = 2,00
+retorno potencial = R$40,00
+
+Se o fator atual da partida for 0,65:
+
+Cash Out = 40 x 0,65
+Cash Out = R$26,00
+
+Se a situação mudar favoravelmente e o fator passar para 0,80:
+
+Cash Out = 40 x 0,80
+Cash Out = R$32,00
+
+A regra exata deve ser definida no código e documentada para que os integrantes consigam explicar na arguição.
+
+============================================================
+15. PLACE_BET
+============================================================
+
+Fluxo:
+
+Usuário seleciona odd
+    ↓
+seleção vai para Bet Slip
+    ↓
+usuário informa valor
+    ↓
+frontend calcula retorno potencial
+    ↓
+usuário confirma
+    ↓
+frontend envia PLACE_BET
+    ↓
+backend recebe
+    ↓
+verifica saldo
+    ↓
+verifica mercado
+    ↓
+verifica valor
+    ↓
+verifica odd
+    ↓
+debita saldo atomicamente
+    ↓
+cria BILHETE_APOSTA
+    ↓
+envia BET_CONFIRMED
+
+Validações importantes:
+- valor deve ser maior que zero;
+- saldo deve ser suficiente;
+- mercado deve estar ativo;
+- aposta não deve ser feita em mercado suspenso;
+- dados devem estar válidos.
+
+Nunca permitir saldo negativo.
+
+============================================================
+16. CASH_OUT
+============================================================
+
+Fluxo:
+
+Aposta ativa
+    ↓
+Cash Out sendo recalculado
+    ↓
+usuário clica
+    ↓
+frontend envia CASH_OUT
+    ↓
+backend recebe
+    ↓
+trava a operação da aposta
+    ↓
+verifica se a aposta ainda está ATIVA
+    ↓
+verifica se mercado/evento permite o Cash Out
+    ↓
+verifica o valor válido
+    ↓
+fecha a aposta
+    ↓
+registra TRANSACAO_CASHOUT
+    ↓
+credita saldo
+    ↓
+envia CASH_OUT_CONFIRMED
+    ↓
+envia BALANCE_UPDATE
+    ↓
+libera a trava
+
+O sistema deve evitar:
+- dois Cash Outs para a mesma aposta;
+- Cash Out depois de a aposta já ter sido liquidada;
+- pagamento duplicado.
+
+============================================================
+17. RACE CONDITION
+============================================================
+
+Essa é uma parte importante para a avaliação.
+
+Situação:
+- usuário solicita Cash Out;
+- praticamente no mesmo instante acontece um gol.
+
+O sistema não pode concluir duas operações incompatíveis.
+
+Estratégia sugerida:
+
+recebe CASH_OUT
+    ↓
+trava a aposta
+    ↓
+verifica status
+    ↓
+verifica mercado
+    ↓
+calcula valor
+    ↓
+fecha/aplica alteração
+    ↓
+atualiza saldo
+    ↓
+libera trava
+
+A mesma lógica de controle deve ser considerada para eventos que alterem a situação da partida.
+
+A implementação deve utilizar mecanismos adequados de concorrência no backend Node.js.
+
+Documentar essa decisão no relatório.
+
+============================================================
+18. GOAL E SUSPENSÃO
+============================================================
+
+Quando ocorrer GOAL:
+
+1. suspender mercados afetados;
+2. enviar evento GOAL;
+3. atualizar placar;
+4. recalcular odds;
+5. recalcular Cash Out;
+6. atualizar frontend;
+7. liberar mercado quando estiver pronto.
+
+Frontend:
+- mostrar banner/pop-up;
+- sinal sonoro;
+- desabilitar temporariamente os botões de odds afetados;
+- mostrar mensagem de mercado suspenso.
+
+Exemplo:
+
+GOOOL!
+
+Flamengo 1 x 0 Santos
+
+Mercado temporariamente suspenso.
+
+============================================================
+19. LIQUIDAÇÃO AUTOMÁTICA
+============================================================
+
+Quando a partida terminar:
+
+Partida = ENCERRADA
+    ↓
+buscar apostas ATIVAS
+    ↓
+verificar resultado
+    ↓
+GREEN ou RED
+
+Se GREEN:
+retorno = valor apostado x odd
+creditar saldo
+
+Se RED:
+não pagar
+
+Atualizar status da aposta.
+
+Depois enviar:
+BALANCE_UPDATE
+
+Registrar histórico.
+
+============================================================
+20. RANKING
+============================================================
+
+O ranking deve mostrar os maiores saldos da sessão.
+
+Exemplo:
+
+RANKING DA SESSÃO
+
+1º Arthur        R$ 182,50
+2º João          R$ 137,80
+3º Jogador 03    R$ 105,00
+4º Jogador 04    R$ 94,20
+
+O ranking deve ser atualizado em tempo real.
+
+============================================================
+21. AS TRÊS TELAS PRINCIPAIS
+============================================================
+
+TELA 1 — Lobby de Apostas ao Vivo
+
+Arquivo:
+tela1-odds.html
+
+Responsabilidades:
+- mostrar partidas;
+- mostrar esportes;
+- mostrar placar;
+- mostrar tempo;
+- mostrar odds;
+- atualizar odds sem recarregar página;
+- indicar mercado suspenso;
+- permitir selecionar uma odd;
+- mostrar conexão WebSocket.
+
+Filtros podem incluir:
+- Futebol
+- Basquete
+- Tênis
+
+Botões de odds:
+Ao clicar, a seleção vai para o Bet Slip.
+
+Status da conexão:
+mostrar aviso quando o WebSocket estiver desconectado.
+
+Mensagem sugerida:
+[Conexão WS Interrompida — Cotações Pausadas]
+
+TELA 2 — Detalhes da Partida / Bet Slip
+
+Arquivo:
+tela2-betslip.html
+
+Responsabilidades:
+- mostrar partida selecionada;
+- mostrar mercado;
+- mostrar seleção;
+- mostrar odd;
+- permitir digitar valor;
+- calcular retorno potencial automaticamente;
+- permitir confirmar;
+- permitir remover seleção;
+- mostrar resultado da confirmação.
+
+Fluxo:
+seleciona odd
+    ↓
+Bet Slip
+    ↓
+digita valor
+    ↓
+calcula retorno
+    ↓
+confirmar
+    ↓
+PLACE_BET
+
+Se a odd mudar antes da confirmação:
+mostrar aviso e pedir nova confirmação.
+
+Se saldo for insuficiente:
+im pedir a confirmação.
+
+TELA 3 — Carteira / Cash Out
+
+Arquivo:
+tela3-cashout.html
+
+Responsabilidades:
+- mostrar saldo;
+- mostrar apostas abertas;
+- mostrar Cash Out atual;
+- atualizar Cash Out via WebSocket;
+- permitir executar Cash Out;
+- mostrar histórico de apostas encerradas;
+- permitir retornar ao Lobby.
+
+Filtros:
+- Abertas
+- Encerradas
+
+============================================================
+22. CONEXÃO ENTRE AS TELAS
+============================================================
+
+Fluxo principal:
+
+Tela 1 — Lobby
+    ↓
+seleciona odd
+    ↓
+Tela 2 — Bet Slip
+    ↓
+PLACE_BET
+    ↓
+Tela 3 — Carteira / Cash Out
+    ↓
+CASH_OUT
+    ↓
+retorna ao Lobby
+
+O professor descreve esse mapeamento consolidado no documento.
+
+============================================================
+23. DIVISÃO INICIAL DO TRABALHO
+============================================================
+
+Integrantes:
+- Arthur Borges Rodrigues
+- João Lucas Tavares Silva
+
+Divisão sugerida:
+
+Arthur:
+- backend;
+- WebSocket;
+- PostgreSQL;
+- regras das apostas;
+- Cash Out;
+- liquidação;
+- concorrência;
+- integração do backend.
+
+João:
+- frontend;
+- HTML;
+- CSS;
+- JavaScript de interface;
+- Lobby;
+- Bet Slip;
+- Carteira;
+- Ranking;
+- mensagens visuais.
+
+ATENÇÃO:
+Mesmo com a divisão, os dois integrantes precisam entender o sistema completo para a arguição.
+
+A divisão é organizacional, não deve criar dependência de conhecimento.
+
+============================================================
+24. RELATÓRIO
+============================================================
+
+Além do sistema, criar um relatório para servir como documentação e material de apoio para a arguição.
+
+Estrutura sugerida:
+
+1. Introdução
+2. Objetivo
+3. Tecnologias utilizadas
+4. Arquitetura do sistema
+5. Requisitos funcionais
+6. Requisitos não funcionais
+7. Banco de dados
+8. Comunicação WebSocket
+9. Funcionamento das apostas
+10. Funcionamento do Cash Out
+11. Simulação da partida
+12. Tratamento de concorrência
+13. Interfaces
+14. Testes realizados
+15. Considerações finais
+
+O relatório deve conter também uma tabela de rastreabilidade:
+
+RF-01 -> saldo inicial
+RF-02 -> ODDS_UPDATE
+RF-03 -> PLACE_BET
+RF-04 -> cálculo dinâmico do Cash Out
+RF-05 -> CASH_OUT
+RF-06 -> GOAL + suspensão
+RF-07 -> liquidação automática
+RF-08 -> painel + ranking
+RNF-01 -> controle de concorrência
+RNF-02 -> validação de saldo
+RNF-03 -> WebSocket + baixa latência
+
+O objetivo é conseguir responder rapidamente durante a arguição como cada requisito foi implementado.
+
+============================================================
+25. TESTES
+============================================================
+
+Testar no mínimo:
+
+Conexão:
+- cliente conecta;
+- saldo inicial R$100;
+- atualização chega pelo WebSocket.
+
+Odds:
+- odds mudam sem recarregar;
+- subida e queda aparecem visualmente;
+- mercado suspenso bloqueia aposta.
+
+Apostas:
+- saldo suficiente;
+- saldo insuficiente;
+- valor inválido;
+- mercado suspenso;
+- odd alterada;
+- aposta confirmada;
+- saldo debitado.
+
+Cash Out:
+- valor é atualizado;
+- Cash Out funciona;
+- saldo é creditado;
+- aposta muda para encerrada;
+- mesma aposta não pode sofrer Cash Out duas vezes.
+
+GOAL:
+- banner;
+- sinal sonoro;
+- suspensão;
+- atualização do placar;
+- atualização de odds;
+- atualização de Cash Out;
+- reabertura posterior.
+
+Final da partida:
+- apostas vencedoras recebem prêmio;
+- apostas perdedoras não recebem;
+- saldo é atualizado;
+- status muda.
+
+Concorrência:
+- Cash Out próximo de GOAL;
+- impedir pagamento duplicado;
+- impedir mudança inconsistente de status.
+
+Ranking:
+- atualização em tempo real;
+- ordenação por saldo.
+
+============================================================
+26. ROTEIRO DA ARGUIÇÃO
+============================================================
+
+O professor fará uma arguição com o sistema funcionando.
+
+Preparar uma demonstração nesta ordem:
+
+1. Abrir o sistema.
+2. Mostrar a conexão WebSocket.
+3. Mostrar saldo inicial de R$100.
+4. Mostrar odds mudando em tempo real.
+5. Selecionar uma odd.
+6. Mostrar Bet Slip.
+7. Fazer uma aposta.
+8. Mostrar débito do saldo.
+9. Mostrar aposta ativa.
+10. Mostrar Cash Out mudando.
+11. Executar Cash Out.
+12. Mostrar crédito no saldo.
+13. Esperar um GOAL.
+14. Mostrar suspensão do mercado.
+15. Mostrar alteração do placar.
+16. Mostrar mudança das odds.
+17. Finalizar uma partida.
+18. Mostrar liquidação.
+19. Mostrar ranking.
+
+Além de demonstrar, saber explicar:
+- por que WebSocket foi utilizado;
+- como funciona PLACE_BET;
+- como funciona CASH_OUT;
+- como o Cash Out é calculado;
+- como o saldo é protegido;
+- como o sistema evita Race Condition;
+- como ocorre a liquidação;
+- como o frontend recebe atualizações;
+- como o banco está relacionado.
+
+============================================================
+27. INSTRUÇÕES PARA O ANTIGRAVITY
+============================================================
+
+Ao trabalhar neste projeto, seguir estas regras:
+
+1. Não gerar o projeto completo de uma vez.
+2. Trabalhar por etapas.
+3. Antes de alterar arquivos, analisar a estrutura existente.
+4. Evitar apagar código funcional sem necessidade.
+5. Manter arquitetura organizada.
+6. Usar nomes claros e consistentes.
+7. Não inventar requisitos que não sejam necessários.
+8. Respeitar os nomes dos eventos do documento do professor.
+9. Respeitar os campos dos payloads.
+10. Validar todas as entradas.
+11. Nunca permitir saldo negativo.
+12. Evitar pagamentos duplicados.
+13. Implementar controle para Race Condition.
+14. Criar testes para cada regra importante.
+15. Manter documentação atualizada.
+16. Explicar as alterações realizadas após cada etapa.
+17. Sempre informar quais arquivos foram criados ou modificados.
+18. Não passar para a próxima etapa se a etapa atual estiver quebrada.
+19. Priorizar código que os alunos consigam compreender e explicar.
+20. Não adicionar frameworks ou bibliotecas desnecessárias.
+21. Manter frontend e backend separados.
+22. Fazer commits pequenos e descritivos.
+23. Não substituir Node.js por Python.
+24. Usar PostgreSQL como banco principal.
+25. Usar WebSocket como canal principal de comunicação em tempo real.
+
+============================================================
+28. PORTA DO WEBSOCKET — ATENÇÃO
+============================================================
+
+O documento do professor apresenta duas referências diferentes:
+
+ws://localhost:3000
+
+e
+
+ws://localhost:8080/bets
+
+Antes da implementação final, escolher uma única configuração para o projeto e manter frontend, backend e documentação consistentes.
+
+Não manter duas portas diferentes sem uma justificativa técnica.
+
+============================================================
+29. ORDEM FINAL DE EXECUÇÃO
+============================================================
+
+ETAPA 1
+Criar repositório GitHub.
+
+ETAPA 2
+Criar estrutura de pastas.
+
+ETAPA 3
+Configurar Node.js.
+
+ETAPA 4
+Configurar PostgreSQL.
+
+ETAPA 5
+Criar banco e tabelas.
+
+ETAPA 6
+Criar servidor WebSocket.
+
+ETAPA 7
+Implementar conexão e saldo R$100.
+
+ETAPA 8
+Implementar simulador da partida.
+
+ETAPA 9
+Implementar ODDS_UPDATE.
+
+ETAPA 10
+Implementar PLACE_BET.
+
+ETAPA 11
+Implementar Cash Out.
+
+ETAPA 12
+Implementar GOAL e suspensão.
+
+ETAPA 13
+Implementar liquidação.
+
+ETAPA 14
+Implementar ranking.
+
+ETAPA 15
+Criar Tela 1.
+
+ETAPA 16
+Criar Tela 2.
+
+ETAPA 17
+Criar Tela 3.
+
+ETAPA 18
+Integrar frontend e backend.
+
+ETAPA 19
+Criar testes.
+
+ETAPA 20
+Corrigir problemas.
+
+ETAPA 21
+Atualizar README e relatório.
+
+ETAPA 22
+Preparar roteiro de apresentação/arguição.
+
+============================================================
+30. PRINCÍPIO GERAL DO PROJETO
+============================================================
+
+O objetivo é chegar a uma aplicação funcional, simples de entender e fiel ao documento do professor.
+
+Prioridades:
+
+1. Funcionamento correto.
+2. WebSocket funcionando em tempo real.
+3. Regras de negócio corretas.
+4. Segurança da lógica do saldo.
+5. Tratamento de concorrência.
+6. Banco de dados organizado.
+7. Interface funcional.
+8. Documentação.
+9. Facilidade de explicação durante a arguição.
+
+Sempre que houver dúvida sobre implementação:
+- primeiro verificar o documento do professor;
+- depois verificar as decisões já tomadas neste arquivo;
+- só então escolher uma solução técnica;
+- documentar mudanças relevantes.
+
+FIM DO GUIA
