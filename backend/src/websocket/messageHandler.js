@@ -32,6 +32,53 @@ registerHandler('PING', async (ws, payload, clientInfo) => {
   });
 });
 
+// Tratador para consulta de saldo do apostador
+registerHandler('GET_BALANCE', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const apostadorService = require('../services/apostadorService');
+  const apostadorId = clientInfo.apostador?.id_apostador || 1;
+  const saldo = await apostadorService.getSaldo(apostadorId);
+
+  sendToClient(ws, 'BALANCE_UPDATE', {
+    apostadorId,
+    saldo,
+    motivo: 'CONSULTA_SALDO'
+  });
+});
+
+// Tratador para identificação / troca de usuário na sessão
+registerHandler('IDENTIFY', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const apostadorService = require('../services/apostadorService');
+
+  const apostador = await apostadorService.getOrCreateSession({
+    clientId: clientInfo.id,
+    apostadorId: payload.apostadorId || payload.userId,
+    nome: payload.nome,
+    cpf: payload.cpf
+  });
+
+  clientInfo.apostador = apostador;
+  ws.apostadorId = apostador.id_apostador;
+
+  sendToClient(ws, 'BALANCE_UPDATE', {
+    apostadorId: apostador.id_apostador,
+    saldo: apostador.saldo_ficticio,
+    motivo: 'IDENTIFICACAO_CONCLUIDA'
+  });
+});
+
+// Tratador para consulta de ranking da sessão (RF-08)
+registerHandler('GET_RANKING', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const apostadorService = require('../services/apostadorService');
+  const ranking = await apostadorService.getRanking();
+
+  sendToClient(ws, 'RANKING_UPDATE', {
+    ranking
+  });
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente

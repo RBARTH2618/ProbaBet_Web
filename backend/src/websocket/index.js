@@ -1,9 +1,10 @@
 const crypto = require('crypto');
 const { WebSocketServer, WebSocket } = require('ws');
 const { handleMessage, registerHandler } = require('./messageHandler');
+const apostadorService = require('../services/apostadorService');
 
 let wss = null;
-const clients = new Map(); // Map<string, { ws, id, ip, connectedAt, apostadorId }>
+const clients = new Map(); // Map<string, { ws, id, ip, connectedAt, apostador }>
 let heartbeatInterval = null;
 
 /**
@@ -25,6 +26,28 @@ function sendToClient(ws, event, payload = {}) {
 
   ws.send(message);
   return true;
+}
+
+/**
+ * Envia uma mensagem para todas as conexões ativas de um apostador específico.
+ * @param {number} apostadorId 
+ * @param {string} event 
+ * @param {object} payload 
+ * @returns {number}
+ */
+function sendToApostador(apostadorId, event, payload = {}) {
+  const targetId = parseInt(apostadorId, 10);
+  let sentCount = 0;
+
+  for (const clientInfo of clients.values()) {
+    if (clientInfo.apostador?.id_apostador === targetId) {
+      if (sendToClient(clientInfo.ws, event, payload)) {
+        sentCount++;
+      }
+    }
+  }
+
+  return sentCount;
 }
 
 /**
@@ -71,12 +94,34 @@ function initWebSocketServer(httpServer) {
 
   console.log('[WebSocket] Servidor WebSocket inicializado e ouvindo conexões.');
 
-  wss.on('connection', (ws, req) => {
+  wss.on('connection', async (ws, req) => {
     const clientId = crypto.randomUUID();
     const clientIp = req.socket.remoteAddress || 'unknown';
 
+    // Parse da query string da URL para vincular o apostador (RF-01)
+    let apostadorId = null;
+    let nome = null;
+    let cpf = null;
+    try {
+      const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+      apostadorId = url.searchParams.get('apostadorId') || url.searchParams.get('userId');
+      nome = url.searchParams.get('nome');
+      cpf = url.searchParams.get('cpf');
+    } catch (e) {
+      // Ignora erro de parsing na URL
+    }
+
+    // [RF-01] Vincular à sessão do apostador o saldo fictício inicial de R$ 100,00
+    const apostador = await apostadorService.getOrCreateSession({
+      clientId,
+      apostadorId,
+      nome,
+      cpf
+    });
+
     // Metadados do cliente
     ws.id = clientId;
+    ws.apostadorId = apostador.id_apostador;
     ws.isAlive = true;
     
     // Resposta ao pong do heartbeat
@@ -87,17 +132,32 @@ function initWebSocketServer(httpServer) {
     const clientInfo = {
       id: clientId,
       ip: clientIp,
+      apostador,
       connectedAt: new Date(),
       ws
     };
 
     clients.set(clientId, clientInfo);
-    console.log(`[WebSocket] Cliente conectado [${clientId}] de ${clientIp}. Total ativos: ${clients.size}`);
+    console.log(`[WebSocket] Cliente conectado [${clientId}] - Apostador: ${apostador.nome_completo} (ID: ${apostador.id_apostador}, Saldo: R$ ${apostador.saldo_ficticio.toFixed(2)}). Total ativos: ${clients.size}`);
 
-    // [RF-01] Mensagem inicial de handshake ao conectar
+    // [RF-01] Atribuição de Saldo Fictício Inicial e confirmação da carteira no handshake
     sendToClient(ws, 'CONNECTION_ESTABLISHED', {
       clientId,
-      message: 'Conexão WebSocket com ProbaBet estabelecida com sucesso!'
+      message: 'Conexão WebSocket com ProbaBet estabelecida com sucesso!',
+      apostador: {
+        id: apostador.id_apostador,
+        nome: apostador.nome_completo,
+        cpf: apostador.cpf_usuario,
+        saldo: apostador.saldo_ficticio
+      },
+      saldo: apostador.saldo_ficticio
+    });
+
+    // [RF-01] Transmitir evento inicial de confirmação de saldo da carteira
+    sendToClient(ws, 'BALANCE_UPDATE', {
+      apostadorId: apostador.id_apostador,
+      saldo: apostador.saldo_ficticio,
+      motivo: 'SALDO_INICIAL'
     });
 
     // Recepção e roteamento de mensagens
