@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test:db": "node src/database/test-connection.js"
+    "test:db": "node src/database/test-connection.js",
+    "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [
     "websocket",
