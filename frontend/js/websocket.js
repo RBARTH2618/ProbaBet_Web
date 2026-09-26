@@ -142,6 +142,20 @@ function handleServerEvent(payload) {
       }
       break;
 
+    case 'BET_CONFIRMED':
+      logEvent('APOSTA', `✅ Bilhete #${payload.bet?.idAposta} Confirmado: R$ ${payload.bet?.valorApostado?.toFixed(2)} (@ ${payload.bet?.oddMomento}) -> Retorno: R$ ${payload.bet?.retornoPotencial?.toFixed(2)}`, 'ev-green');
+      if (typeof window.onBetConfirmed === 'function') {
+        window.onBetConfirmed(payload);
+      }
+      break;
+
+    case 'BET_REJECTED':
+      logEvent('REJEITADA', `❌ ${payload.message}`, 'ev-red');
+      if (typeof window.onBetRejected === 'function') {
+        window.onBetRejected(payload);
+      }
+      break;
+
     case 'PONG':
       logEvent('PONG', 'Heartbeat confirmado pelo servidor', 'ev-blue');
       break;

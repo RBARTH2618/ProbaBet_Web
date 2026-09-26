@@ -103,6 +103,58 @@ registerHandler('GET_ODDS', async (ws, payload, clientInfo) => {
   });
 });
 
+// [RF-03] Tratador para submissão de aposta (PLACE_BET)
+registerHandler('PLACE_BET', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const betService = require('../services/betService');
+
+  const apostadorId = clientInfo.apostador?.id_apostador || 1;
+
+  try {
+    const result = await betService.placeBet({
+      apostadorId,
+      matchId: payload.matchId || payload.idPartida,
+      mercadoId: payload.mercadoId || payload.nomeMercado || '1X2',
+      selecao: payload.selecao || payload.opcao,
+      odd: payload.odd,
+      valor: payload.valor
+    });
+
+    // Emite comprovante BET_CONFIRMED (RF-03)
+    sendToClient(ws, 'BET_CONFIRMED', {
+      bet: result.bet,
+      novoSaldo: result.novoSaldo,
+      message: 'Aposta confirmada com sucesso!'
+    });
+
+    // Emite atualização do saldo da carteira (RF-07)
+    sendToClient(ws, 'BALANCE_UPDATE', {
+      apostadorId,
+      saldo: result.novoSaldo,
+      motivo: 'APOSTA_REALIZADA'
+    });
+  } catch (err) {
+    console.warn(`[WebSocket] Aposta rejeitada para cliente [${clientInfo.id}]: ${err.message}`);
+    sendToClient(ws, 'BET_REJECTED', {
+      code: err.code || 'BET_VALIDATION_ERROR',
+      message: err.message,
+      saldoAtual: err.saldoAtual
+    });
+  }
+});
+
+// Tratador para listar apostas ativas do apostador
+registerHandler('GET_ACTIVE_BETS', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const betService = require('../services/betService');
+  const apostadorId = clientInfo.apostador?.id_apostador || 1;
+  const bets = await betService.getActiveBets(apostadorId);
+
+  sendToClient(ws, 'ACTIVE_BETS_LIST', {
+    bets
+  });
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente

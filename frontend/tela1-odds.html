@@ -250,7 +250,7 @@
               <span class="potential-return-val" id="potentialReturn">R$ 0,00</span>
             </div>
 
-            <button class="btn-place-bet" id="btnPlaceBet" onclick="mockPlaceBet()">
+            <button class="btn-place-bet" id="btnPlaceBet" onclick="submitPlaceBet()">
               Confirmar Aposta
             </button>
           </div>
@@ -299,12 +299,50 @@
       document.getElementById('potentialReturn').textContent = `R$ ${potential.toFixed(2)}`;
     };
 
-    function mockPlaceBet() {
-      if (!currentSelection) return;
+    function submitPlaceBet() {
+      if (!window.currentSelection) return;
       const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
-      logEvent('BET_SLIP', `Aposta preparada no valor de R$ ${stake.toFixed(2)} (@ ${currentSelection.odd}). (Será processada via PLACE_BET na Etapa 10)`, 'ev-green');
-      alert(`Aposta de R$ ${stake.toFixed(2)} selecionada com sucesso! O envio do evento PLACE_BET pelo WebSocket será ativado na Etapa 10.`);
+
+      if (stake <= 0) {
+        alert('Informe um valor de aposta maior que zero.');
+        return;
+      }
+
+      const btn = document.getElementById('btnPlaceBet');
+      btn.disabled = true;
+      btn.textContent = 'Enviando pelo WebSocket...';
+
+      // [RF-03] Submissão do bilhete via WebSocket (PLACE_BET)
+      window.sendWs('PLACE_BET', {
+        matchId: window.currentSelection.matchId,
+        mercadoId: window.currentSelection.market,
+        selecao: window.currentSelection.option,
+        odd: window.currentSelection.odd,
+        valor: stake
+      });
     }
+
+    window.onBetConfirmed = function(payload) {
+      const btn = document.getElementById('btnPlaceBet');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Aposta';
+      }
+
+      alert(`✅ APOSTA CONFIRMADA!\nBilhete: #${payload.bet?.idAposta}\nPartida: ${payload.bet?.partidaNome}\nSeleção: ${payload.bet?.selecao} (@ ${payload.bet?.oddMomento})\nValor: R$ ${payload.bet?.valorApostado?.toFixed(2)}\nRetorno Potencial: R$ ${payload.bet?.retornoPotencial?.toFixed(2)}\nNovo Saldo: R$ ${payload.novoSaldo?.toFixed(2)}`);
+
+      clearBetSlip();
+    };
+
+    window.onBetRejected = function(payload) {
+      const btn = document.getElementById('btnPlaceBet');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Aposta';
+      }
+
+      alert(`❌ APOSTA REJEITADA:\n${payload.message}`);
+    };
   </script>
 </body>
 </html>
