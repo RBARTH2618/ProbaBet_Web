@@ -161,6 +161,67 @@ registerHandler('RESET_MATCHES', async (ws, payload, clientInfo) => {
   matchSimulatorService.resetAllMatches();
 });
 
+// [RF-05 / RNF-01] Tratador para solicitação de encerramento antecipado (CASH_OUT)
+registerHandler('CASH_OUT', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const cashoutService = require('../services/cashoutService');
+
+  const apostadorId = clientInfo.apostador?.id_apostador || ws.apostadorId || 1;
+  const betId = payload.betId || payload.idAposta || payload.id_aposta;
+  const requestedValue = payload.requestedValue || payload.valorResgate;
+
+  try {
+    const result = await cashoutService.processCashOut({
+      betId,
+      apostadorId,
+      requestedValue
+    });
+
+    // Emite confirmação oficial de Cash Out (RF-05)
+    sendToClient(ws, 'CASH_OUT_CONFIRMED', {
+      betId: result.betId,
+      valorResgatado: result.valorResgatado,
+      novoSaldo: result.novoSaldo,
+      timestamp: result.timestamp,
+      message: 'Cash Out processado e creditado com sucesso!'
+    });
+
+    // Emite atualização do saldo da carteira (RF-07)
+    sendToClient(ws, 'BALANCE_UPDATE', {
+      apostadorId,
+      saldo: result.novoSaldo,
+      motivo: 'CASHOUT_REALIZADO'
+    });
+  } catch (err) {
+    console.warn(`[WebSocket] Cash Out rejeitado para cliente [${clientInfo.id}]: ${err.message}`);
+    sendToClient(ws, 'CASH_OUT_REJECTED', {
+      betId,
+      code: err.code || 'CASHOUT_ERROR',
+      message: err.message
+    });
+  }
+});
+
+// Tratador para listar ofertas de Cash Out das apostas ativas
+registerHandler('GET_CASHOUT_OFFERS', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const betService = require('../services/betService');
+  const cashoutService = require('../services/cashoutService');
+  const apostadorId = clientInfo.apostador?.id_apostador || ws.apostadorId || 1;
+
+  const bets = await betService.getActiveBets(apostadorId);
+  const offers = bets.map(bet => {
+    const betId = bet.id_aposta || bet.idAposta;
+    return {
+      betId,
+      matchId: bet.id_partida || bet.matchId,
+      cashoutValue: cashoutService.calculateOffer(bet)
+    };
+  });
+
+  sendToClient(ws, 'CASHOUT_OFFERS_LIST', { offers });
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente

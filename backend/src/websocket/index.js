@@ -206,6 +206,7 @@ function initWebSocketServer(httpServer) {
 module.exports = {
   initWebSocketServer,
   sendToClient,
+  sendToApostador,
   broadcast,
   getConnectedClientsCount,
   registerHandler

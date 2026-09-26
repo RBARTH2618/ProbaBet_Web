@@ -119,16 +119,26 @@ class BetService extends EventEmitter {
     } catch (dbErr) {
       // Fallback em memória caso o banco de dados esteja offline
       novoSaldo = await apostadorService.debitarSaldo(idApostador, valorApostado);
-      
       const betId = nextBetId++;
       betRecord = {
         id_aposta: betId,
         id_apostador: idApostador,
         id_mercado: idMercadoRef,
+        id_partida: idPartida,
+        matchId: idPartida,
+        nome_mercado: mercadoId,
+        mercado: mercadoId,
+        opcao_selecao: selecao,
+        selecao: selecao,
+        partidaNome: `${match.time_casa} x ${match.time_fora}`,
         valor_apostado: valorApostado,
+        valorApostado,
         odd_momento: oddMomento,
+        oddMomento,
         retorno_potencial: retornoPotencial,
+        retornoPotencial,
         status_aposta: 'ATIVA',
+        status: 'ATIVA',
         data_hora_aposta: new Date()
       };
       memoryBets.set(betId, betRecord);
@@ -137,17 +147,29 @@ class BetService extends EventEmitter {
     // Complementa dados descritivos para resposta
     const formattedBet = {
       idAposta: betRecord.id_aposta,
+      id_aposta: betRecord.id_aposta,
       idApostador,
+      id_apostador: idApostador,
       matchId: idPartida,
+      id_partida: idPartida,
       partidaNome: `${match.time_casa} x ${match.time_fora}`,
       mercado: mercadoId,
+      nome_mercado: mercadoId,
       selecao,
+      opcao_selecao: selecao,
       valorApostado,
+      valor_apostado: valorApostado,
       oddMomento,
+      odd_momento: oddMomento,
       retornoPotencial,
-      status: betRecord.status_aposta,
+      retorno_potencial: retornoPotencial,
+      status: betRecord.status_aposta || 'ATIVA',
+      status_aposta: betRecord.status_aposta || 'ATIVA',
       dataHora: betRecord.data_hora_aposta || new Date().toISOString()
     };
+
+    // Cache em memória para ultra-baixa latência (< 100ms)
+    memoryBets.set(formattedBet.idAposta, formattedBet);
 
     // Emite evento interno de aposta realizada (para o módulo de Cash Out na Etapa 11)
     this.emit('bet_placed', formattedBet);
@@ -176,15 +198,20 @@ class BetService extends EventEmitter {
     }
 
     return Array.from(memoryBets.values())
-      .filter(b => b.id_apostador === id && b.status_aposta === 'ATIVA')
+      .filter(b => (b.id_apostador === id || b.idApostador === id) && (b.status_aposta === 'ATIVA' || b.status === 'ATIVA'))
       .map(b => ({
-        id_aposta: b.id_aposta,
-        id_apostador: b.id_apostador,
-        valor_apostado: b.valor_apostado,
-        odd_momento: b.odd_momento,
-        retorno_potencial: b.retorno_potencial,
-        status_aposta: b.status_aposta,
-        data_hora_aposta: b.data_hora_aposta
+        id_aposta: b.id_aposta || b.idAposta,
+        id_apostador: b.id_apostador || b.idApostador,
+        id_partida: b.id_partida || b.matchId,
+        matchId: b.matchId || b.id_partida,
+        nome_mercado: b.nome_mercado || b.mercado,
+        opcao_selecao: b.opcao_selecao || b.selecao,
+        partidaNome: b.partidaNome,
+        valor_apostado: b.valor_apostado || b.valorApostado,
+        odd_momento: b.odd_momento || b.oddMomento,
+        retorno_potencial: b.retorno_potencial || b.retornoPotencial,
+        status_aposta: b.status_aposta || b.status,
+        data_hora_aposta: b.data_hora_aposta || b.dataHora
       }));
   }
 
@@ -203,6 +230,7 @@ class BetService extends EventEmitter {
     const memBet = memoryBets.get(parseInt(betId, 10));
     if (memBet) {
       memBet.status_aposta = status;
+      memBet.status = status;
     }
   }
 

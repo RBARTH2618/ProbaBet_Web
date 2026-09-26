@@ -71,5 +71,9 @@ server.listen(PORT, async () => {
   // [ETAPA 9] Conectar o Motor de Odds ao Simulador para transmissão dinâmica de ODDS_UPDATE
   const oddsEngineService = require('./services/oddsEngineService');
   oddsEngineService.bindToSimulator(matchSimulatorService);
+
+  // [ETAPA 11] Conectar o Motor de Cash Out aos eventos de Odds e Apostas
+  const cashoutService = require('./services/cashoutService');
+  cashoutService.bindEvents();
 });
 

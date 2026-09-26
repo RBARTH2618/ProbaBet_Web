@@ -74,7 +74,7 @@
           <button onclick="resetSimulation()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; padding: 0.45rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" title="Reinicia o relógio e placares das 3 partidas para novo ciclo de apostas">
             <span>🔄</span> Reiniciar Partidas
           </button>
-          <div class="badge-etapas">Etapas 1 a 10 Concluídas</div>
+          <div class="badge-etapas">Etapas 1 a 11 Concluídas</div>
         </div>
       </div>
 
@@ -261,6 +261,23 @@
           </div>
         </div>
 
+      </div>
+
+      <!-- MINHAS APOSTAS ATIVAS & CASH OUT (ETAPA 11 - RF-04, RF-05) -->
+      <div class="active-bets-section">
+        <div class="active-bets-card">
+          <div class="active-bets-header">
+            <div class="active-bets-title">
+              <span>⚡</span> Apostas Ativas & Cash Out
+            </div>
+            <div class="active-bets-count" id="activeBetsCount">0</div>
+          </div>
+          <div class="active-bets-list" id="activeBetsList">
+            <div class="active-bets-empty" id="activeBetsEmpty">
+              Nenhuma aposta ativa no momento.
+            </div>
+          </div>
+        </div>
       </div>
     </aside>
 

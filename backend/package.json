@@ -11,6 +11,7 @@
     "test:simulator": "node src/services/test-simulator.js",
     "test:odds": "node src/services/test-odds.js",
     "test:bet": "node src/services/test-place-bet.js",
+    "test:cashout": "node src/services/test-cashout.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [

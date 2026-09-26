@@ -11,6 +11,7 @@ const WS_URL = `${WS_PROTOCOL}//${WS_HOST}:${WS_PORT}?apostadorId=1`;
 let socket = null;
 let reconnectTimer = null;
 let currentApostador = null;
+const activeBetsMap = new Map(); // Map<betId, bet>
 
 // Elementos da Interface
 const wsStatusDot = document.getElementById('wsStatusDot');
@@ -105,6 +106,8 @@ function handleServerEvent(payload) {
       if (Array.isArray(payload.matches)) {
         payload.matches.forEach(m => updateMatchUI(m));
       }
+      // Solicita a lista de apostas ativas da sessão
+      window.sendWs('GET_ACTIVE_BETS');
       break;
 
     case 'BALANCE_UPDATE':
@@ -148,9 +151,55 @@ function handleServerEvent(payload) {
 
     case 'BET_CONFIRMED':
       logEvent('APOSTA', `✅ Bilhete #${payload.bet?.idAposta} Confirmado: R$ ${payload.bet?.valorApostado?.toFixed(2)} (@ ${payload.bet?.oddMomento}) -> Retorno: R$ ${payload.bet?.retornoPotencial?.toFixed(2)}`, 'ev-green');
+      if (payload.bet) {
+        const id = payload.bet.idAposta || payload.bet.id_aposta;
+        activeBetsMap.set(id, payload.bet);
+        renderActiveBets();
+      }
       if (typeof window.onBetConfirmed === 'function') {
         window.onBetConfirmed(payload);
       }
+      break;
+
+    case 'ACTIVE_BETS_LIST':
+      if (Array.isArray(payload.bets)) {
+        activeBetsMap.clear();
+        payload.bets.forEach(b => {
+          const id = b.idAposta || b.id_aposta;
+          activeBetsMap.set(id, b);
+        });
+        renderActiveBets();
+      }
+      break;
+
+    case 'CASHOUT_UPDATE':
+      const cBet = activeBetsMap.get(payload.betId);
+      if (cBet) {
+        cBet.cashoutValue = payload.cashoutValue;
+        updateCashoutButton(payload.betId, payload.cashoutValue);
+      }
+      break;
+
+    case 'CASH_OUT_CONFIRMED':
+      logEvent('CASHOUT', `💰 Cash Out #${payload.betId} Confirmado: R$ ${payload.valorResgatado?.toFixed(2)} creditados!`, 'ev-green');
+      const cashedBet = activeBetsMap.get(payload.betId);
+      if (cashedBet) {
+        cashedBet.status = 'CASH_OUT';
+        cashedBet.status_aposta = 'CASH_OUT';
+        cashedBet.cashoutFinal = payload.valorResgatado;
+        renderActiveBets();
+      }
+      break;
+
+    case 'CASH_OUT_REJECTED':
+      logEvent('CASHOUT_RECUSADO', `❌ Aposta #${payload.betId}: ${payload.message}`, 'ev-red');
+      const btnRej = document.getElementById(`cashoutBtn-${payload.betId}`);
+      if (btnRej) {
+        btnRej.disabled = false;
+        const currentOffer = activeBetsMap.get(payload.betId)?.cashoutValue || 0;
+        btnRej.innerHTML = `<span>Encerrar Aposta</span> <span class="cashout-offer-val">R$ ${currentOffer.toFixed(2)}</span>`;
+      }
+      alert(`❌ CASH OUT REJEITADO:\n${payload.message}`);
       break;
 
     case 'BET_REJECTED':
@@ -278,3 +327,110 @@ window.sendWs = function(type, payload = {}) {
 window.addEventListener('DOMContentLoaded', () => {
   initWebSocket();
 });
+
+/**
+ * Renderiza os bilhetes de aposta ativos no painel lateral com ofertas dinâmicas de Cash Out
+ */
+function renderActiveBets() {
+  const listEl = document.getElementById('activeBetsList');
+  const countEl = document.getElementById('activeBetsCount');
+  if (!listEl) return;
+
+  const bets = Array.from(activeBetsMap.values());
+  const activeCount = bets.filter(b => (b.status === 'ATIVA' || b.status_aposta === 'ATIVA')).length;
+  if (countEl) countEl.textContent = activeCount;
+
+  if (bets.length === 0) {
+    listEl.innerHTML = `<div class="active-bets-empty">Nenhuma aposta ativa no momento.</div>`;
+    return;
+  }
+
+  listEl.innerHTML = '';
+  bets.slice().reverse().forEach(bet => {
+    const id = bet.idAposta || bet.id_aposta;
+    const matchName = bet.partidaNome || (bet.time_casa ? `${bet.time_casa} x ${bet.time_fora}` : `Partida #${bet.matchId || bet.id_partida}`);
+    const mercado = bet.mercado || bet.nome_mercado || '1X2';
+    const selecao = bet.selecao || bet.opcao_selecao || 'CASA';
+    const odd = Number(bet.oddMomento || bet.odd_momento || 1).toFixed(2);
+    const valorApostado = Number(bet.valorApostado || bet.valor_apostado || 0).toFixed(2);
+    const retornoPotencial = Number(bet.retornoPotencial || bet.retorno_potencial || 0).toFixed(2);
+    const status = bet.status || bet.status_aposta || 'ATIVA';
+    
+    // Oferta instantânea (se ainda não veio CASHOUT_UPDATE, usa 95% do valor apostado como estimativa inicial)
+    const offerVal = bet.cashoutValue !== undefined ? Number(bet.cashoutValue).toFixed(2) : (Number(valorApostado) * 0.95).toFixed(2);
+
+    const item = document.createElement('div');
+    item.className = 'active-bet-item';
+    item.id = `betCard-${id}`;
+
+    let actionHtml = '';
+    if (status === 'CASH_OUT') {
+      const finalVal = bet.cashoutFinal ? Number(bet.cashoutFinal).toFixed(2) : offerVal;
+      actionHtml = `<div class="badge-cashed-out">✓ CASH OUT REALIZADO: R$ ${finalVal}</div>`;
+    } else {
+      actionHtml = `
+        <div class="cashout-control">
+          <button class="btn-cashout" id="cashoutBtn-${id}" onclick="requestCashOut(${id}, ${offerVal}, this)" title="Encerrar bilhete antecipadamente com valor garantido (RF-05)">
+            <span>⚡ Cash Out</span>
+            <span class="cashout-offer-val" id="cashoutVal-${id}">R$ ${offerVal}</span>
+          </button>
+        </div>
+      `;
+    }
+
+    item.innerHTML = `
+      <div class="bet-item-header">
+        <span class="bet-item-match">${matchName}</span>
+        <span class="bet-item-id">#${id}</span>
+      </div>
+      <div class="bet-item-selection">
+        <span>${mercado}: ${selecao}</span>
+        <span>@ ${odd}</span>
+      </div>
+      <div class="bet-item-financials">
+        <span>Apostado: <strong>R$ ${valorApostado}</strong></span>
+        <span>Retorno: <strong style="color: var(--accent-gold);">R$ ${retornoPotencial}</strong></span>
+      </div>
+      ${actionHtml}
+    `;
+
+    listEl.appendChild(item);
+  });
+}
+
+/**
+ * Atualiza o botão de Cash Out de um bilhete específico com nova cotação e microanimação (RF-04)
+ */
+function updateCashoutButton(betId, newValue) {
+  const valEl = document.getElementById(`cashoutVal-${betId}`);
+  const btnEl = document.getElementById(`cashoutBtn-${betId}`);
+  if (!valEl || !btnEl) return;
+
+  const formatted = Number(newValue).toFixed(2);
+  valEl.textContent = `R$ ${formatted}`;
+
+  // Atualiza também o handler de clique com a nova cotação
+  btnEl.onclick = () => requestCashOut(betId, parseFloat(formatted), btnEl);
+
+  // Efeito de pulso para feedback de tempo real
+  btnEl.classList.remove('cashout-pulse');
+  void btnEl.offsetWidth; // Reflow
+  btnEl.classList.add('cashout-pulse');
+}
+
+/**
+ * Submete requisição de Cash Out via WebSocket com trava preventiva (RF-05 / RNF-01)
+ */
+window.requestCashOut = function(betId, offerVal, btnEl) {
+  if (btnEl) {
+    btnEl.disabled = true;
+    btnEl.innerHTML = `<span>⏳ Encerrando...</span>`;
+  }
+
+  logEvent('CASHOUT', `Solicitando Cash Out para bilhete #${betId} (Oferta: R$ ${Number(offerVal).toFixed(2)})...`, 'ev-blue');
+
+  window.sendWs('CASH_OUT', {
+    betId: parseInt(betId, 10),
+    requestedValue: parseFloat(offerVal)
+  });
+};
