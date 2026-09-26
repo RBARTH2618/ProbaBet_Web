@@ -108,12 +108,34 @@ function handleServerEvent(payload) {
       updateBalanceUI(payload.saldo);
       break;
 
+    case 'MATCH_UPDATE':
+      updateMatchUI(payload);
+      break;
+
+    case 'MATCHES_LIST':
+      if (Array.isArray(payload.matches)) {
+        payload.matches.forEach(m => updateMatchUI(m));
+      }
+      break;
+
+    case 'MATCH_FINISHED':
+      logEvent('FIM', `Partida ${payload.matchId} Encerrada! Placar: ${payload.placarCasa} x ${payload.placarFora}`, 'ev-red');
+      updateMatchUI(payload);
+      break;
+
     case 'ODDS_UPDATE':
       logEvent('ODDS', `Cotações atualizadas para o jogo ${payload.matchId}`, 'ev-blue');
       break;
 
     case 'GOAL':
-      logEvent('GOL', `GOL na partida ${payload.matchId}! Placar: ${payload.placarCasa} x ${payload.placarFora}`, 'ev-green');
+      logEvent('GOL', `⚽ GOOOL na partida ${payload.matchId}! ${payload.timeAutor} marcou! (${payload.placarCasa} x ${payload.placarFora})`, 'ev-green');
+      updateMatchUI(payload);
+      // Efeito visual no card da partida
+      const cardGoal = document.querySelector(`.match-card[data-match-id="${payload.matchId}"]`);
+      if (cardGoal) {
+        cardGoal.style.boxShadow = '0 0 25px rgba(0, 230, 118, 0.6)';
+        setTimeout(() => { cardGoal.style.boxShadow = ''; }, 2500);
+      }
       break;
 
     case 'PONG':
@@ -123,6 +145,30 @@ function handleServerEvent(payload) {
     default:
       logEvent('EVENTO', `${eventName}: ${JSON.stringify(payload)}`, 'ev-blue');
       break;
+  }
+}
+
+/**
+ * Atualiza placares e relógio do card da partida dinamicamente
+ */
+function updateMatchUI(m) {
+  const matchId = m.matchId || m.id_partida;
+  const card = document.querySelector(`.match-card[data-match-id="${matchId}"]`);
+  if (!card) return;
+
+  const scoreCasaEl = document.getElementById(`scoreCasa-${matchId}`);
+  const scoreForaEl = document.getElementById(`scoreFora-${matchId}`);
+  const timeEl = card.querySelector('.match-time');
+
+  const placarCasa = m.placarCasa !== undefined ? m.placarCasa : m.placar_casa;
+  const placarFora = m.placarFora !== undefined ? m.placarFora : m.placar_fora;
+  const minuto = m.minuto !== undefined ? m.minuto : m.minuto_jogo;
+
+  if (scoreCasaEl && placarCasa !== undefined) scoreCasaEl.textContent = placarCasa;
+  if (scoreForaEl && placarFora !== undefined) scoreForaEl.textContent = placarFora;
+  if (timeEl && minuto !== undefined) {
+    const statusTxt = m.status === 'ENCERRADA' ? 'ENCERRADA' : `${minuto}' AO VIVO`;
+    timeEl.textContent = `⏱️ ${statusTxt}`;
   }
 }
 

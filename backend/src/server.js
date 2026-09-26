@@ -17,6 +17,8 @@ app.use(express.json());
 const frontendPath = path.join(__dirname, '../../frontend');
 app.use(express.static(frontendPath));
 
+const matchSimulatorService = require('./services/matchSimulatorService');
+
 // Rota de verificação de integridade (Healthcheck)
 app.get('/api/health', async (req, res) => {
   const dbStatus = await db.testConnection();
@@ -27,6 +29,10 @@ app.get('/api/health', async (req, res) => {
     websocket: {
       status: 'active',
       connectedClients: getConnectedClientsCount()
+    },
+    simulator: {
+      status: matchSimulatorService.isRunning ? 'running' : 'stopped',
+      activeMatches: matchSimulatorService.getAllMatches().length
     },
     database: {
       status: dbStatus.success ? 'connected' : 'disconnected',
@@ -57,5 +63,9 @@ server.listen(PORT, async () => {
     console.warn(`[PostgreSQL] Aviso: Conexão pendente ou banco offline (${dbStatus.error}).`);
     console.warn(`[PostgreSQL] O servidor HTTP/WebSocket continua ativo.`);
   }
+
+  // [ETAPA 8] Inicialização do Motor de Simulação da Partida
+  await matchSimulatorService.loadMatchesFromDatabase();
+  matchSimulatorService.startSimulation();
 });
 

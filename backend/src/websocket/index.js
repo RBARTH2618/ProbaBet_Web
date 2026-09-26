@@ -141,6 +141,7 @@ function initWebSocketServer(httpServer) {
     console.log(`[WebSocket] Cliente conectado [${clientId}] - Apostador: ${apostador.nome_completo} (ID: ${apostador.id_apostador}, Saldo: R$ ${apostador.saldo_ficticio.toFixed(2)}). Total ativos: ${clients.size}`);
 
     // [RF-01] Atribuição de Saldo Fictício Inicial e confirmação da carteira no handshake
+    const matchSimulatorService = require('../services/matchSimulatorService');
     sendToClient(ws, 'CONNECTION_ESTABLISHED', {
       clientId,
       message: 'Conexão WebSocket com ProbaBet estabelecida com sucesso!',
@@ -150,7 +151,8 @@ function initWebSocketServer(httpServer) {
         cpf: apostador.cpf_usuario,
         saldo: apostador.saldo_ficticio
       },
-      saldo: apostador.saldo_ficticio
+      saldo: apostador.saldo_ficticio,
+      matches: matchSimulatorService.getAllMatches()
     });
 
     // [RF-01] Transmitir evento inicial de confirmação de saldo da carteira

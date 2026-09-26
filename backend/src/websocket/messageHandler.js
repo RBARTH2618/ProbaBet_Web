@@ -79,6 +79,15 @@ registerHandler('GET_RANKING', async (ws, payload, clientInfo) => {
   });
 });
 
+// Tratador para consulta da lista de partidas ao vivo (Etapa 8)
+registerHandler('GET_MATCHES', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const matchSimulatorService = require('../services/matchSimulatorService');
+  sendToClient(ws, 'MATCHES_LIST', {
+    matches: matchSimulatorService.getAllMatches()
+  });
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente

@@ -8,6 +8,7 @@
     "dev": "node --watch src/server.js",
     "test:db": "node src/database/test-connection.js",
     "test:ws": "node src/websocket/test-client.js",
+    "test:simulator": "node src/services/test-simulator.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [
