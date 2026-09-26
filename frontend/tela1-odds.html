@@ -264,14 +264,14 @@
   <!-- SCRIPTS -->
   <script src="js/websocket.js"></script>
   <script>
-    let currentSelection = null;
+    window.currentSelection = null;
 
     function selectOdd(matchId, matchName, market, option, odd, buttonEl) {
       // Remove estilo de seleção anterior
       document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
       buttonEl.classList.add('selected');
 
-      currentSelection = { matchId, matchName, market, option, odd };
+      window.currentSelection = { matchId, matchName, market, option, odd };
 
       document.getElementById('betslipEmpty').style.display = 'none';
       document.getElementById('betslipContent').style.display = 'block';
@@ -281,23 +281,23 @@
       document.getElementById('betslipSelection').textContent = `${market}: ${option}`;
       document.getElementById('betslipOdd').textContent = `@ ${odd.toFixed(2)}`;
 
-      calculateReturn();
+      window.calculateReturn();
     }
 
     function clearBetSlip() {
-      currentSelection = null;
+      window.currentSelection = null;
       document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
       document.getElementById('betslipEmpty').style.display = 'block';
       document.getElementById('betslipContent').style.display = 'none';
       document.getElementById('betslipCount').textContent = '0';
     }
 
-    function calculateReturn() {
-      if (!currentSelection) return;
+    window.calculateReturn = function() {
+      if (!window.currentSelection) return;
       const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
-      const potential = stake * currentSelection.odd;
+      const potential = stake * window.currentSelection.odd;
       document.getElementById('potentialReturn').textContent = `R$ ${potential.toFixed(2)}`;
-    }
+    };
 
     function mockPlaceBet() {
       if (!currentSelection) return;

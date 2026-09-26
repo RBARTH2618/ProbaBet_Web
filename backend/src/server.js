@@ -67,5 +67,9 @@ server.listen(PORT, async () => {
   // [ETAPA 8] Inicialização do Motor de Simulação da Partida
   await matchSimulatorService.loadMatchesFromDatabase();
   matchSimulatorService.startSimulation();
+
+  // [ETAPA 9] Conectar o Motor de Odds ao Simulador para transmissão dinâmica de ODDS_UPDATE
+  const oddsEngineService = require('./services/oddsEngineService');
+  oddsEngineService.bindToSimulator(matchSimulatorService);
 });
 

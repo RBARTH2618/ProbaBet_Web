@@ -124,7 +124,11 @@ function handleServerEvent(payload) {
       break;
 
     case 'ODDS_UPDATE':
-      logEvent('ODDS', `Cotações atualizadas para o jogo ${payload.matchId}`, 'ev-blue');
+      updateOddsUI(payload);
+      const casasInfo = payload.odds?.CASA ? `CASA @ ${payload.odds.CASA}` : '';
+      const empateInfo = payload.odds?.EMPATE ? ` | EMPATE @ ${payload.odds.EMPATE}` : '';
+      const foraInfo = payload.odds?.FORA ? ` | FORA @ ${payload.odds.FORA}` : '';
+      logEvent('ODDS', `Jogo ${payload.matchId}: ${casasInfo}${empateInfo}${foraInfo}`, 'ev-blue');
       break;
 
     case 'GOAL':
@@ -169,6 +173,50 @@ function updateMatchUI(m) {
   if (timeEl && minuto !== undefined) {
     const statusTxt = m.status === 'ENCERRADA' ? 'ENCERRADA' : `${minuto}' AO VIVO`;
     timeEl.textContent = `⏱️ ${statusTxt}`;
+  }
+}
+
+/**
+ * Atualiza cotações das odds com feedback visual de subida (verde) e descida (vermelho) (RF-02)
+ */
+function updateOddsUI(payload) {
+  const matchId = payload.matchId;
+  const odds = payload.odds;
+  const directions = payload.directions || {};
+
+  if (!odds) return;
+
+  for (const [selecao, oddVal] of Object.entries(odds)) {
+    const oddEl = document.getElementById(`odd-${matchId}-${selecao}`);
+    if (!oddEl) continue;
+
+    const formattedOdd = typeof oddVal === 'number' ? oddVal.toFixed(2) : (oddVal.odd ? oddVal.odd.toFixed(2) : oddVal);
+    oddEl.textContent = formattedOdd;
+
+    const direction = directions[selecao] || (oddVal.direction);
+    if (direction === 'UP') {
+      oddEl.classList.remove('down');
+      oddEl.classList.add('up');
+      setTimeout(() => oddEl.classList.remove('up'), 1500);
+    } else if (direction === 'DOWN') {
+      oddEl.classList.remove('up');
+      oddEl.classList.add('down');
+      setTimeout(() => oddEl.classList.remove('down'), 1500);
+    }
+
+    // Se o usuário estiver com essa odd selecionada na Caderneta (Bet Slip), atualiza dinamicamente!
+    if (window.currentSelection && 
+        window.currentSelection.matchId === matchId && 
+        window.currentSelection.option === selecao) {
+      window.currentSelection.odd = parseFloat(formattedOdd);
+      const betslipOddEl = document.getElementById('betslipOdd');
+      if (betslipOddEl) {
+        betslipOddEl.textContent = `@ ${formattedOdd}`;
+      }
+      if (typeof window.calculateReturn === 'function') {
+        window.calculateReturn();
+      }
+    }
   }
 }
 

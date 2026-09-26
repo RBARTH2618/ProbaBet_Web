@@ -88,6 +88,21 @@ registerHandler('GET_MATCHES', async (ws, payload, clientInfo) => {
   });
 });
 
+// Tratador para consulta de cotações das odds de uma partida (RF-02 / Etapa 9)
+registerHandler('GET_ODDS', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const oddsEngineService = require('../services/oddsEngineService');
+  const matchId = payload.matchId || 1;
+  const odds = oddsEngineService.getOddsByMatch(matchId);
+
+  sendToClient(ws, 'ODDS_UPDATE', {
+    matchId,
+    nomeMercado: '1X2',
+    odds: odds ? odds['1X2'] : null,
+    timestamp: new Date().toISOString()
+  });
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente
