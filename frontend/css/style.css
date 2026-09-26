@@ -874,3 +874,129 @@ body {
   text-align: center;
   width: 100%;
 }
+
+/* ============================================================
+   BANNER DE GOL E SUSPENSÃO DE MERCADO (ETAPA 12 - RF-06)
+   ============================================================ */
+.goal-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.goal-popup-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.goal-popup-card {
+  background: linear-gradient(145deg, #182030, #0a0e17);
+  border: 2px solid var(--accent-green);
+  border-radius: var(--radius-lg);
+  padding: 2rem 3rem;
+  text-align: center;
+  box-shadow: 0 0 50px rgba(0, 230, 118, 0.5), inset 0 0 20px rgba(0, 230, 118, 0.15);
+  transform: scale(0.85);
+  transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  max-width: 520px;
+  width: 90%;
+}
+
+.goal-popup-overlay.active .goal-popup-card {
+  transform: scale(1);
+}
+
+.goal-popup-badge {
+  display: inline-block;
+  background: linear-gradient(135deg, #00e676, #00a854);
+  color: #000;
+  font-size: 1.1rem;
+  font-weight: 900;
+  letter-spacing: 2px;
+  padding: 0.4rem 1.4rem;
+  border-radius: 999px;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px var(--accent-green-glow);
+  animation: goalBounce 0.8s infinite alternate ease-in-out;
+}
+
+@keyframes goalBounce {
+  from { transform: scale(1); }
+  to { transform: scale(1.08); }
+}
+
+.goal-popup-title {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 0.6rem;
+}
+
+.goal-popup-score {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--accent-gold);
+  margin-bottom: 1.25rem;
+}
+
+.goal-popup-status {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.btn-goal-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.btn-goal-trigger:hover {
+  background: rgba(0, 230, 118, 0.15);
+  border-color: var(--accent-green);
+  color: var(--accent-green);
+}
+
+.match-card.suspended {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.2);
+}
+
+.market-suspended-strip {
+  background: rgba(245, 158, 11, 0.15);
+  border-top: 1px solid rgba(245, 158, 11, 0.3);
+  color: var(--accent-gold);
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-align: center;
+  padding: 0.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}

@@ -140,13 +140,18 @@ function handleServerEvent(payload) {
 
     case 'GOAL':
       logEvent('GOL', `⚽ GOOOL na partida ${payload.matchId}! ${payload.timeAutor} marcou! (${payload.placarCasa} x ${payload.placarFora})`, 'ev-green');
-      updateMatchUI(payload);
-      // Efeito visual no card da partida
-      const cardGoal = document.querySelector(`.match-card[data-match-id="${payload.matchId}"]`);
-      if (cardGoal) {
-        cardGoal.style.boxShadow = '0 0 25px rgba(0, 230, 118, 0.6)';
-        setTimeout(() => { cardGoal.style.boxShadow = ''; }, 2500);
-      }
+      showGoalBanner(payload);
+      updateMatchUI({ ...payload, status: 'SUSPENSA' });
+      break;
+
+    case 'MARKET_SUSPENDED':
+      logEvent('SUSPENSÃO', `⚠️ Partida #${payload.matchId}: Mercado temporariamente suspenso!`, 'ev-red');
+      updateMatchUI({ matchId: payload.matchId, status: 'SUSPENSA' });
+      break;
+
+    case 'MARKET_REOPENED':
+      logEvent('MERCADO', `🔓 Partida #${payload.matchId}: Mercado reaberto com novas cotações!`, 'ev-green');
+      updateMatchUI({ matchId: payload.matchId, status: 'AO_VIVO' });
       break;
 
     case 'BET_CONFIRMED':
@@ -220,6 +225,64 @@ function handleServerEvent(payload) {
 }
 
 /**
+ * Sintetizador nativo Web Audio API para alerta sonoro esportivo de Gol (RF-06)
+ */
+function playGoalSound() {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+
+    // Sequência de acordes comemorativos (C5, E5, G5, C6)
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, idx) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + idx * 0.12);
+
+      gain.gain.setValueAtTime(0.25, ctx.currentTime + idx * 0.12);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + idx * 0.12 + 0.35);
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.start(ctx.currentTime + idx * 0.12);
+      osc.stop(ctx.currentTime + idx * 0.12 + 0.35);
+    });
+  } catch (e) {
+    console.warn('[Audio] Não foi possível reproduzir som de gol:', e);
+  }
+}
+
+/**
+ * Exibe o banner pop-up de Gol e suspensão de mercado com animação (RF-06)
+ */
+function showGoalBanner(payload) {
+  const overlay = document.getElementById('goalPopupOverlay');
+  const titleEl = document.getElementById('goalPopupTitle');
+  const scoreEl = document.getElementById('goalPopupScore');
+  if (!overlay) return;
+
+  const autor = payload.timeAutor || 'Time';
+  const timeCasa = payload.timeCasa || 'Casa';
+  const timeFora = payload.timeFora || 'Fora';
+  const placarCasa = payload.placarCasa !== undefined ? payload.placarCasa : 0;
+  const placarFora = payload.placarFora !== undefined ? payload.placarFora : 0;
+
+  if (titleEl) titleEl.textContent = `⚽ Gol do ${autor}!`;
+  if (scoreEl) scoreEl.textContent = `${timeCasa} ${placarCasa} x ${placarFora} ${timeFora}`;
+
+  overlay.classList.add('active');
+  playGoalSound();
+
+  // O banner pop-up permanece ativo por 3.5 segundos
+  setTimeout(() => {
+    overlay.classList.remove('active');
+  }, 3500);
+}
+
+/**
  * Atualiza placares e relógio do card da partida dinamicamente
  */
 function updateMatchUI(m) {
@@ -247,6 +310,21 @@ function updateMatchUI(m) {
     } else {
       timeEl.textContent = `⏱️ ${minuto}' AO VIVO`;
     }
+  }
+
+  // Faixa de mercado suspenso
+  let strip = card.querySelector('.market-suspended-strip');
+  if (status === 'SUSPENSA') {
+    card.classList.add('suspended');
+    if (!strip) {
+      strip = document.createElement('div');
+      strip.className = 'market-suspended-strip';
+      strip.innerHTML = `<span>🔒 MERCADO SUSPENSO (CONGELAMENTO DE ODDS)</span>`;
+      card.appendChild(strip);
+    }
+  } else {
+    card.classList.remove('suspended');
+    if (strip) strip.remove();
   }
 
   // Desativa os botões de aposta caso o jogo esteja ENCERRADO ou SUSPENSO

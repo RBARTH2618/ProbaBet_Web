@@ -161,6 +161,14 @@ registerHandler('RESET_MATCHES', async (ws, payload, clientInfo) => {
   matchSimulatorService.resetAllMatches();
 });
 
+// [RF-06] Tratador para forçar disparo manual de gol (testes e apresentação)
+registerHandler('TRIGGER_GOAL', async (ws, payload, clientInfo) => {
+  const matchSimulatorService = require('../services/matchSimulatorService');
+  const matchId = payload.matchId || 1;
+  const autor = payload.autor || (Math.random() > 0.5 ? 'CASA' : 'FORA');
+  matchSimulatorService.triggerManualGoal(matchId, autor);
+});
+
 // [RF-05 / RNF-01] Tratador para solicitação de encerramento antecipado (CASH_OUT)
 registerHandler('CASH_OUT', async (ws, payload, clientInfo) => {
   const { sendToClient } = require('./index');

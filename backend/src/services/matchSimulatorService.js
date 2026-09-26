@@ -209,6 +209,9 @@ class MatchSimulatorService extends EventEmitter {
 
     console.log(`[Simulador] ⚽ GOOOL do ${timeAutor}! ${match.time_casa} ${match.placar_casa} x ${match.placar_fora} ${match.time_fora} (${match.minuto_jogo}')`);
 
+    // [RF-06] Congela temporariamente os mercados afetados definindo status como SUSPENSA
+    match.status_partida = 'SUSPENSA';
+
     // Notifica ouvintes internos (ex: trava de concorrência RNF-01 e suspensão RF-06)
     this.emit('goal', {
       match,
@@ -219,21 +222,60 @@ class MatchSimulatorService extends EventEmitter {
       minuto: match.minuto_jogo
     });
 
-    // Transmite broadcast prioritário GOAL
+    // 1. Transmite broadcast prioritário do GOAL (RF-06)
     broadcast('GOAL', {
       matchId: match.id_partida,
       timeAutor,
+      timeCasa: match.time_casa,
+      timeFora: match.time_fora,
       placarCasa: match.placar_casa,
       placarFora: match.placar_fora,
-      minuto: match.minuto_jogo
+      minuto: match.minuto_jogo,
+      status: 'SUSPENSA',
+      mensagem: `⚽ GOOOL do ${timeAutor}! Mercado temporariamente suspenso.`
     });
+
+    // 2. Transmite notificação explícita de suspensão dos mercados
+    broadcast('MARKET_SUSPENDED', {
+      matchId: match.id_partida,
+      motivo: 'GOL',
+      timeAutor,
+      status: 'SUSPENSA',
+      mensagem: `Mercado temporariamente suspenso devido a Gol do ${timeAutor}!`
+    });
+
+    // 3. Após 4 segundos de congelamento temporário, reabre o mercado com novas cotações
+    setTimeout(() => {
+      if (match.status_partida === 'SUSPENSA') {
+        match.status_partida = 'AO_VIVO';
+        console.log(`[Simulador] 🔓 Mercado reaberto para a partida ${match.id_partida} (${match.time_casa} x ${match.time_fora}).`);
+
+        broadcast('MARKET_REOPENED', {
+          matchId: match.id_partida,
+          status: 'AO_VIVO',
+          mensagem: 'Mercado reaberto para novas apostas e Cash Out.'
+        });
+
+        broadcast('MATCH_UPDATE', {
+          matchId: match.id_partida,
+          minuto: match.minuto_jogo,
+          placarCasa: match.placar_casa,
+          placarFora: match.placar_fora,
+          status: 'AO_VIVO'
+        });
+
+        // Força recálculo imediato de odds com o novo placar
+        this.emit('match_tick', match);
+      }
+    }, 4000);
   }
 
   /**
    * Permite disparar um gol manualmente (útil para testes ou demonstração ao professor)
    */
   triggerManualGoal(partidaId, autor = 'CASA') {
-    const match = this.matches.get(partidaId);
+    const id = parseInt(partidaId, 10);
+    const match = this.matches.get(id);
     if (!match || match.status_partida !== 'AO_VIVO') return false;
 
     if (autor === 'CASA') match.placar_casa += 1;
