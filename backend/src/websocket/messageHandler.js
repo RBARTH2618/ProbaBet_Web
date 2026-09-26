@@ -155,6 +155,12 @@ registerHandler('GET_ACTIVE_BETS', async (ws, payload, clientInfo) => {
   });
 });
 
+// Tratador para reiniciar as partidas ao vivo (para facilidade de testes)
+registerHandler('RESET_MATCHES', async (ws, payload, clientInfo) => {
+  const matchSimulatorService = require('../services/matchSimulatorService');
+  matchSimulatorService.resetAllMatches();
+});
+
 /**
  * Processa uma mensagem recebida de um cliente WebSocket.
  * @param {WebSocket} ws - Instância do socket do cliente

@@ -101,6 +101,10 @@ function handleServerEvent(payload) {
       if (payload.saldo !== undefined) {
         updateBalanceUI(payload.saldo);
       }
+      // Sincroniza o estado atual das partidas imediatamente no handshake
+      if (Array.isArray(payload.matches)) {
+        payload.matches.forEach(m => updateMatchUI(m));
+      }
       break;
 
     case 'BALANCE_UPDATE':
@@ -182,11 +186,36 @@ function updateMatchUI(m) {
   const placarFora = m.placarFora !== undefined ? m.placarFora : m.placar_fora;
   const minuto = m.minuto !== undefined ? m.minuto : m.minuto_jogo;
 
+  const status = m.status || m.status_partida || 'AO_VIVO';
+
   if (scoreCasaEl && placarCasa !== undefined) scoreCasaEl.textContent = placarCasa;
   if (scoreForaEl && placarFora !== undefined) scoreForaEl.textContent = placarFora;
   if (timeEl && minuto !== undefined) {
-    const statusTxt = m.status === 'ENCERRADA' ? 'ENCERRADA' : `${minuto}' AO VIVO`;
-    timeEl.textContent = `⏱️ ${statusTxt}`;
+    if (status === 'ENCERRADA') {
+      timeEl.innerHTML = `<span style="color: #ef4444; font-weight: bold;">⏱️ ENCERRADA</span>`;
+    } else if (status === 'SUSPENSA') {
+      timeEl.innerHTML = `<span style="color: #f59e0b; font-weight: bold;">⚠️ SUSPENSA</span>`;
+    } else {
+      timeEl.textContent = `⏱️ ${minuto}' AO VIVO`;
+    }
+  }
+
+  // Desativa os botões de aposta caso o jogo esteja ENCERRADO ou SUSPENSO
+  const oddButtons = card.querySelectorAll('.odd-btn');
+  if (status === 'ENCERRADA' || status === 'SUSPENSA') {
+    oddButtons.forEach(btn => {
+      btn.disabled = true;
+      btn.style.opacity = '0.35';
+      btn.style.cursor = 'not-allowed';
+      btn.setAttribute('title', `Mercado não disponível: Partida ${status}`);
+    });
+  } else {
+    oddButtons.forEach(btn => {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.removeAttribute('title');
+    });
   }
 }
 

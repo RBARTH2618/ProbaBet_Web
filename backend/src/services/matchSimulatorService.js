@@ -164,6 +164,25 @@ class MatchSimulatorService extends EventEmitter {
           placarFora: match.placar_fora,
           status: 'ENCERRADA'
         });
+
+        // Auto-recomeça nova rodada após 15 segundos para manter a plataforma sempre viva para testes
+        setTimeout(() => {
+          if (match.status_partida === 'ENCERRADA') {
+            console.log(`[Simulador] 🔄 Nova rodada para a partida ${match.id_partida} (${match.time_casa} x ${match.time_fora})...`);
+            match.minuto_jogo = 0;
+            match.placar_casa = 0;
+            match.placar_fora = 0;
+            match.status_partida = 'AO_VIVO';
+            broadcast('MATCH_UPDATE', {
+              matchId: match.id_partida,
+              minuto: 0,
+              placarCasa: 0,
+              placarFora: 0,
+              status: 'AO_VIVO'
+            });
+            this.emit('match_tick', match);
+          }
+        }, 15000);
       }
 
       // 4. Emite evento interno de ciclo para outros módulos (ex: Motor de Odds da Etapa 9)
@@ -222,6 +241,29 @@ class MatchSimulatorService extends EventEmitter {
 
     this._notifyGoal(match, autor);
     return true;
+  }
+
+  /**
+   * Reinicia manualmente todas as partidas para novo ciclo ao vivo com 0 minutos e placar 0 x 0
+   */
+  resetAllMatches() {
+    const { broadcast } = require('../websocket');
+    console.log('[Simulador] 🔄 Reiniciando todas as partidas para novo ciclo ao vivo...');
+    for (const match of this.matches.values()) {
+      match.minuto_jogo = 0;
+      match.placar_casa = 0;
+      match.placar_fora = 0;
+      match.status_partida = 'AO_VIVO';
+
+      broadcast('MATCH_UPDATE', {
+        matchId: match.id_partida,
+        minuto: 0,
+        placarCasa: 0,
+        placarFora: 0,
+        status: 'AO_VIVO'
+      });
+      this.emit('match_tick', match);
+    }
   }
 
   /**

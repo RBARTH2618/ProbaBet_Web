@@ -70,7 +70,12 @@
           <h2>⚡ Plataforma em Tempo Real Ativa</h2>
           <p>WebSocket Full-Duplex conectado com saldo inicial de <strong>R$ 100,00</strong> vinculado à sua sessão ([RF-01]).</p>
         </div>
-        <div class="badge-etapas">Etapas 1 a 7 Concluídas</div>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+          <button onclick="resetSimulation()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; padding: 0.45rem 0.85rem; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 0.4rem;" title="Reinicia o relógio e placares das 3 partidas para novo ciclo de apostas">
+            <span>🔄</span> Reiniciar Partidas
+          </button>
+          <div class="badge-etapas">Etapas 1 a 10 Concluídas</div>
+        </div>
       </div>
 
       <!-- CABEÇALHO DA SEÇÃO DE JOGOS -->
@@ -343,6 +348,11 @@
 
       alert(`❌ APOSTA REJEITADA:\n${payload.message}`);
     };
+
+    function resetSimulation() {
+      window.sendWs('RESET_MATCHES');
+      logEvent('SIMULADOR', 'Solicitada reinicialização de todas as partidas para novo ciclo ao vivo.', 'ev-blue');
+    }
   </script>
 </body>
 </html>
