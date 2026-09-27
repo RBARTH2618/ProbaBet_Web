@@ -15,6 +15,7 @@
     "test:goal": "node src/services/test-goal-suspension.js",
     "test:settlement": "node src/services/test-settlement.js",
     "test:ranking": "node src/services/test-ranking.js",
+    "test:e2e": "node src/services/test-e2e-screens.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [

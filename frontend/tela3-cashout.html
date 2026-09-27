@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProbaBet — Tela 3: Carteira do Apostador & Gestão de Cash Out</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- BARRA DE NAVEGAÇÃO SUPERIOR (HEADER) -->
+  <!-- ========================================== -->
+  <header class="navbar">
+    <a href="tela1-odds.html" class="logo-area">
+      <div class="logo-icon">P</div>
+      <div class="logo-text">Proba<span>Bet</span></div>
+    </a>
+
+    <div class="header-status-area">
+      <div class="ws-status-badge">
+        <span class="status-dot" id="wsStatusDot"></span>
+        <span id="wsStatusText">Conectando...</span>
+      </div>
+
+      <div class="wallet-badge">
+        <span class="wallet-icon">💰</span>
+        <span class="wallet-label">Saldo Fictício:</span>
+        <span class="wallet-amount" id="walletAmount">R$ 100,00</span>
+      </div>
+
+      <div class="user-profile">
+        <div class="user-avatar">👤</div>
+        <span class="user-name" id="userName">Arthur Borges</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- ABAS DE NAVEGAÇÃO ENTRE AS 3 TELAS (ETAPA 15 e 16) -->
+  <!-- ========================================== -->
+  <nav class="navigation-tabs">
+    <a href="tela1-odds.html" class="nav-tab">
+      <span>🏟️</span> Tela 1: Lobby & Odds
+    </a>
+    <a href="tela2-betslip.html" class="nav-tab">
+      <span>📋</span> Tela 2: Detalhes & Bet Slip
+    </a>
+    <a href="tela3-cashout.html" class="nav-tab active">
+      <span>💳</span> Tela 3: Carteira & Cash Out
+    </a>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- CONTEÚDO PRINCIPAL -->
+  <!-- ========================================== -->
+  <main class="main-container">
+    
+    <!-- COLUNA PRINCIPAL: GESTÃO FINANCEIRA E APOSTAS -->
+    <section class="matches-column">
+
+      <!-- CARDS KPI DE RESUMO FINANCEIRO -->
+      <div class="wallet-kpi-grid">
+        <div class="kpi-card kpi-green">
+          <span class="kpi-label">Saldo Disponível</span>
+          <span class="kpi-value" id="kpiSaldoDisponivel">R$ 100,00</span>
+          <span class="kpi-subtext">Capital livre para apostar (RF-01)</span>
+        </div>
+
+        <div class="kpi-card kpi-gold">
+          <span class="kpi-label">Total em Jogo</span>
+          <span class="kpi-value" id="kpiTotalEmJogo">R$ 0,00</span>
+          <span class="kpi-subtext" id="kpiApostasAtivasCount">0 apostas ativas</span>
+        </div>
+
+        <div class="kpi-card kpi-blue">
+          <span class="kpi-label">Lucro / Prejuízo (P&L)</span>
+          <span class="kpi-value" id="kpiLucroPrejuizo">R$ 0,00</span>
+          <span class="kpi-subtext">Variação da sessão atual</span>
+        </div>
+      </div>
+
+      <!-- ABAS DE NAVEGAÇÃO DA CARTEIRA -->
+      <div class="wallet-tabs">
+        <button class="wallet-tab-btn active" id="btnTabAbertas" onclick="switchWalletTab('abertas')">
+          <span>⚡</span> Apostas Abertas & Cash Out (<span id="tabCountAbertas">0</span>)
+        </button>
+        <button class="wallet-tab-btn" id="btnTabEncerradas" onclick="switchWalletTab('encerradas')">
+          <span>📜</span> Histórico de Apostas Encerradas (<span id="tabCountEncerradas">0</span>)
+        </button>
+      </div>
+
+      <!-- PAINEL 1: APOSTAS ABERTAS COM CASH OUT EM TEMPO REAL (RF-04, RF-05) -->
+      <div id="panelAbertas">
+        <div class="history-bets-list" id="activeBetsContainer">
+          <!-- Estado Vazio -->
+          <div class="betslip-card" id="emptyActiveBetsCard" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎫</div>
+            <h3 style="color: #fff; margin-bottom: 0.5rem;">Nenhuma aposta ativa no momento</h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto 1.5rem auto;">
+              Explore as cotações em tempo real no Lobby e submeta seu bilhete para habilitar ofertas instantâneas de Cash Out.
+            </p>
+            <a href="tela1-odds.html" style="background: var(--accent-green); color: #000; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.88rem; display: inline-block;">
+              Ir para o Lobby de Apostas
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINEL 2: HISTÓRICO DE APOSTAS ENCERRADAS (RF-07) -->
+      <div id="panelEncerradas" style="display: none;">
+        <div class="history-bets-list" id="settledBetsContainer">
+          <!-- Estado Vazio -->
+          <div class="betslip-card" id="emptySettledBetsCard" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏁</div>
+            <h3 style="color: #fff; margin-bottom: 0.5rem;">Nenhum bilhete liquidado ainda</h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">
+              Assim que suas partidas forem concluídas ou você executar um Cash Out, o histórico financeiro detalhado aparecerá aqui.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- COLUNA LATERAL: RANKING EM TEMPO REAL & ATALHOS -->
+    <aside class="sidebar-column">
+
+      <!-- RANKING DA SESSÃO (RF-08) -->
+      <div class="ranking-card">
+        <div class="ranking-header">
+          <div class="ranking-title">
+            <span>🏆</span> Ranking da Sessão
+          </div>
+          <span class="ranking-badge">Ao Vivo</span>
+        </div>
+        <div class="ranking-list" id="rankingList">
+          <div class="ranking-empty">Carregando classificação...</div>
+        </div>
+      </div>
+
+      <!-- CARD DE ATALHO RÁPIDO PARA APOSTAR -->
+      <div class="betslip-card" style="margin-top: 1.25rem; text-align: center;">
+        <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">🏟️</div>
+        <div style="font-weight: 800; color: #fff; margin-bottom: 0.35rem;">Quer apostar mais?</div>
+        <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+          Volte ao lobby e aproveite as oscilações de Odds ao vivo para novos bilhetes.
+        </p>
+        <a href="tela1-odds.html" style="display: inline-block; background: rgba(0, 230, 118, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); text-decoration: none; padding: 0.55rem 1.2rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem; transition: all var(--transition-fast);">
+          Ver Jogos ao Vivo →
+        </a>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- POP-UP DE GOL E SUSPENSÃO DE MERCADO (RF-06) -->
+  <div id="goalPopupOverlay" class="goal-popup-overlay">
+    <div class="goal-popup-card">
+      <div class="goal-popup-badge">⚽ GOOOOOL!</div>
+      <h2 id="goalPopupTitle" class="goal-popup-title">Gol na Partida!</h2>
+      <div id="goalPopupScore" class="goal-popup-score">-</div>
+      <div class="goal-popup-status">
+        <span>🔒</span> Mercado Temporariamente Suspenso (4s)
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/websocket.js"></script>
+  <script>
+    const INITIAL_SESSION_SALDO = 100.00;
+    const closedBetsHistory = [];
+
+    function switchWalletTab(tab) {
+      const btnAbertas = document.getElementById('btnTabAbertas');
+      const btnEncerradas = document.getElementById('btnTabEncerradas');
+      const panelAbertas = document.getElementById('panelAbertas');
+      const panelEncerradas = document.getElementById('panelEncerradas');
+
+      if (tab === 'abertas') {
+        btnAbertas.classList.add('active');
+        btnEncerradas.classList.remove('active');
+        panelAbertas.style.display = 'block';
+        panelEncerradas.style.display = 'none';
+      } else {
+        btnAbertas.classList.remove('active');
+        btnEncerradas.classList.add('active');
+        panelAbertas.style.display = 'none';
+        panelEncerradas.style.display = 'block';
+      }
+    }
+
+    function updateFinancialKPIs() {
+      // 1. Saldo Disponível
+      const walletText = document.getElementById('walletAmount')?.textContent || 'R$ 100,00';
+      const cleanSaldo = parseFloat(walletText.replace('R$', '').trim().replace('.', '').replace(',', '.')) || 100.00;
+      document.getElementById('kpiSaldoDisponivel').textContent = `R$ ${cleanSaldo.toFixed(2)}`;
+
+      // 2. Total em Jogo (Soma das apostas ativas)
+      let totalEmJogo = 0;
+      let countAtivas = 0;
+      activeBetsMap.forEach(b => {
+        if (b.status === 'ABERTA' || b.status_aposta === 'ABERTA') {
+          totalEmJogo += (b.valorApostado || b.valor_apostado || 0);
+          countAtivas++;
+        }
+      });
+      document.getElementById('kpiTotalEmJogo').textContent = `R$ ${totalEmJogo.toFixed(2)}`;
+      document.getElementById('kpiApostasAtivasCount').textContent = `${countAtivas} aposta${countAtivas === 1 ? '' : 's'} ativa${countAtivas === 1 ? '' : 's'}`;
+      document.getElementById('tabCountAbertas').textContent = countAtivas;
+
+      // 3. Lucro / Prejuízo da Sessão
+      const pnl = (cleanSaldo + totalEmJogo) - INITIAL_SESSION_SALDO;
+      const kpiPnl = document.getElementById('kpiLucroPrejuizo');
+      const prefix = pnl >= 0 ? '+R$ ' : '-R$ ';
+      kpiPnl.textContent = `${prefix}${Math.abs(pnl).toFixed(2)}`;
+      if (pnl > 0) {
+        kpiPnl.style.color = 'var(--accent-green)';
+      } else if (pnl < 0) {
+        kpiPnl.style.color = '#ef4444';
+      } else {
+        kpiPnl.style.color = '#fff';
+      }
+    }
+
+    function renderWalletActiveBets() {
+      const container = document.getElementById('activeBetsContainer');
+      if (!container) return;
+
+      const activeList = Array.from(activeBetsMap.values()).filter(b => b.status === 'ABERTA' || b.status_aposta === 'ABERTA');
+
+      if (activeList.length === 0) {
+        container.innerHTML = `
+          <div class="betslip-card" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🎫</div>
+            <h3 style="color: #fff; margin-bottom: 0.5rem;">Nenhuma aposta ativa no momento</h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto 1.5rem auto;">
+              Explore as cotações em tempo real no Lobby e submeta seu bilhete para habilitar ofertas instantâneas de Cash Out.
+            </p>
+            <a href="tela1-odds.html" style="background: var(--accent-green); color: #000; text-decoration: none; padding: 0.65rem 1.5rem; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.88rem; display: inline-block;">
+              Ir para o Lobby de Apostas
+            </a>
+          </div>
+        `;
+        updateFinancialKPIs();
+        return;
+      }
+
+      container.innerHTML = '';
+      activeList.forEach(b => {
+        const betId = b.idAposta || b.id_aposta;
+        const partidaNome = b.partidaNome || b.partida_nome || `Partida #${b.id_partida || b.matchId}`;
+        const selecao = b.selecao || b.opcao_selecionada;
+        const oddMomento = b.oddMomento || b.odd_momento || 2.00;
+        const valorApostado = b.valorApostado || b.valor_apostado || 20.00;
+        const retornoPotencial = b.retornoPotencial || b.retorno_potencial || (valorApostado * oddMomento);
+        const cashoutVal = b.cashoutValue !== undefined ? b.cashoutValue : valorApostado;
+
+        const card = document.createElement('div');
+        card.className = 'history-bet-card';
+        card.id = `walletCard-${betId}`;
+        card.innerHTML = `
+          <div class="history-bet-main">
+            <div class="history-bet-header">
+              <span class="history-bet-id">BILHETE #${betId}</span>
+              <span class="history-badge badge-active">EM JOGO</span>
+            </div>
+            <div class="history-bet-match">${partidaNome}</div>
+            <div class="history-bet-selection">
+              Seleção: <strong style="color: #fff;">${selecao}</strong> (@ ${Number(oddMomento).toFixed(2)}) • Apostado: R$ ${Number(valorApostado).toFixed(2)}
+            </div>
+            <div style="font-size: 0.78rem; color: var(--text-dim); margin-top: 0.2rem;">
+              Retorno Potencial Máximo: R$ ${Number(retornoPotencial).toFixed(2)}
+            </div>
+          </div>
+
+          <div class="history-bet-financials">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem;">Oferta de Cash Out:</div>
+            <button class="cashout-btn" id="cashoutBtn-${betId}" onclick="executeWalletCashOut(${betId}, ${cashoutVal}, this)" style="min-width: 170px;">
+              <span>Encerrar Aposta</span>
+              <span class="cashout-offer-val" id="cashoutVal-${betId}">R$ ${Number(cashoutVal).toFixed(2)}</span>
+            </button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      updateFinancialKPIs();
+    }
+
+    function renderWalletSettledBets() {
+      const container = document.getElementById('settledBetsContainer');
+      const countEl = document.getElementById('tabCountEncerradas');
+      if (!container) return;
+
+      countEl.textContent = closedBetsHistory.length;
+
+      if (closedBetsHistory.length === 0) {
+        container.innerHTML = `
+          <div class="betslip-card" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🏁</div>
+            <h3 style="color: #fff; margin-bottom: 0.5rem;">Nenhum bilhete liquidado ainda</h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; max-width: 400px; margin: 0 auto;">
+              Assim que suas partidas forem concluídas ou você executar um Cash Out, o histórico financeiro detalhado aparecerá aqui.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = '';
+      closedBetsHistory.forEach(b => {
+        const betId = b.idAposta || b.id_aposta;
+        const partidaNome = b.partidaNome || b.partida_nome || `Partida #${b.id_partida || b.matchId}`;
+        const selecao = b.selecao || b.opcao_selecionada;
+        const valorApostado = b.valorApostado || b.valor_apostado || 20.00;
+        const status = b.status || b.status_aposta;
+        const retorno = b.valorGanho !== undefined ? b.valorGanho : (status === 'RED' ? 0 : valorApostado);
+        const lucro = retorno - valorApostado;
+
+        let badgeClass = 'badge-active';
+        let statusText = status;
+        let profitClass = 'profit-gold';
+
+        if (status === 'GREEN') {
+          badgeClass = 'badge-green';
+          statusText = '🟢 GREEN (VITÓRIA)';
+          profitClass = 'profit-green';
+        } else if (status === 'RED') {
+          badgeClass = 'badge-red';
+          statusText = '🔴 RED (DERROTA)';
+          profitClass = 'profit-red';
+        } else if (status === 'CASH_OUT') {
+          badgeClass = 'badge-cashout';
+          statusText = '⚡ CASHOUT ANTECIPADO';
+          profitClass = lucro >= 0 ? 'profit-green' : 'profit-gold';
+        }
+
+        const card = document.createElement('div');
+        card.className = 'history-bet-card';
+        card.innerHTML = `
+          <div class="history-bet-main">
+            <div class="history-bet-header">
+              <span class="history-bet-id">BILHETE #${betId}</span>
+              <span class="history-badge ${badgeClass}">${statusText}</span>
+            </div>
+            <div class="history-bet-match">${partidaNome}</div>
+            <div class="history-bet-selection">
+              Seleção: <strong style="color: #fff;">${selecao}</strong> • Apostado: R$ ${Number(valorApostado).toFixed(2)}
+            </div>
+          </div>
+
+          <div class="history-bet-financials">
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.15rem;">Retorno Creditado:</div>
+            <div class="history-bet-profit ${profitClass}">R$ ${Number(retorno).toFixed(2)}</div>
+            <div style="font-size: 0.75rem; color: var(--text-dim);">
+              ${lucro >= 0 ? `Lucro: +R$ ${lucro.toFixed(2)}` : `Prejuízo: -R$ ${Math.abs(lucro).toFixed(2)}`}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function executeWalletCashOut(betId, val, btnEl) {
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = `<span>⏳ Encerrando...</span>`;
+      }
+      window.requestCashOut(betId, val, btnEl);
+    }
+
+    // Ouvintes de Eventos da Plataforma ProbaBet
+    window.addEventListener('probabet:ACTIVE_BETS_LIST', (e) => {
+      renderWalletActiveBets();
+    });
+
+    window.addEventListener('probabet:CASHOUT_UPDATE', (e) => {
+      const payload = e.detail;
+      const b = activeBetsMap.get(payload.betId);
+      if (b) {
+        b.cashoutValue = payload.cashoutValue;
+        const valEl = document.getElementById(`cashoutVal-${payload.betId}`);
+        const btnEl = document.getElementById(`cashoutBtn-${payload.betId}`);
+        if (valEl) valEl.textContent = `R$ ${Number(payload.cashoutValue).toFixed(2)}`;
+        if (btnEl) {
+          btnEl.onclick = () => executeWalletCashOut(payload.betId, payload.cashoutValue, btnEl);
+          btnEl.classList.remove('cashout-pulse');
+          void btnEl.offsetWidth;
+          btnEl.classList.add('cashout-pulse');
+        }
+      }
+      updateFinancialKPIs();
+    });
+
+    window.addEventListener('probabet:CASH_OUT_CONFIRMED', (e) => {
+      const payload = e.detail;
+      const b = activeBetsMap.get(payload.betId);
+      if (b) {
+        b.status = 'CASH_OUT';
+        b.valorGanho = payload.valorCreditado;
+        closedBetsHistory.unshift(b);
+        activeBetsMap.delete(payload.betId);
+        renderWalletActiveBets();
+        renderWalletSettledBets();
+        updateFinancialKPIs();
+      }
+    });
+
+    window.addEventListener('probabet:BET_SETTLED', (e) => {
+      const payload = e.detail;
+      const b = activeBetsMap.get(payload.betId);
+      if (b) {
+        b.status = payload.status;
+        b.valorGanho = payload.retorno || 0;
+        closedBetsHistory.unshift(b);
+        activeBetsMap.delete(payload.betId);
+        renderWalletActiveBets();
+        renderWalletSettledBets();
+        updateFinancialKPIs();
+      }
+    });
+
+    window.addEventListener('probabet:BALANCE_UPDATE', (e) => {
+      setTimeout(updateFinancialKPIs, 100);
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      updateFinancialKPIs();
+    });
+  </script>
+</body>
+</html>

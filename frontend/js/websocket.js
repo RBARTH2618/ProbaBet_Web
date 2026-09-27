@@ -92,6 +92,16 @@ function initWebSocket() {
 function handleServerEvent(payload) {
   const eventName = payload.event || payload.type;
 
+  // Dispara eventos customizados no window para telas especializadas (Telas 1, 2 e 3)
+  try {
+    window.dispatchEvent(new CustomEvent('probabet:event', { detail: payload }));
+    if (eventName) {
+      window.dispatchEvent(new CustomEvent(`probabet:${eventName}`, { detail: payload }));
+    }
+  } catch (e) {
+    // Silencia event dispatch em ambientes sem window CustomEvent
+  }
+
   switch (eventName) {
     case 'CONNECTION_ESTABLISHED':
       logEvent('HANDSHAKE', `Conectado! Apostador: ${payload.apostador?.nome} (R$ ${payload.saldo?.toFixed(2)})`, 'ev-green');

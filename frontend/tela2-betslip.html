@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ProbaBet — Tela 2: Detalhes da Partida & Caderneta (Bet Slip)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ========================================== -->
+  <!-- BARRA DE NAVEGAÇÃO SUPERIOR (HEADER) -->
+  <!-- ========================================== -->
+  <header class="navbar">
+    <a href="tela1-odds.html" class="logo-area">
+      <div class="logo-icon">P</div>
+      <div class="logo-text">Proba<span>Bet</span></div>
+    </a>
+
+    <div class="header-status-area">
+      <div class="ws-status-badge">
+        <span class="status-dot" id="wsStatusDot"></span>
+        <span id="wsStatusText">Conectando...</span>
+      </div>
+
+      <a href="tela3-cashout.html" class="wallet-badge" style="text-decoration: none;" title="Clique para abrir a Carteira & Cash Out">
+        <span class="wallet-icon">💰</span>
+        <span class="wallet-label">Saldo Fictício:</span>
+        <span class="wallet-amount" id="walletAmount">R$ 100,00</span>
+      </a>
+
+      <div class="user-profile">
+        <div class="user-avatar">👤</div>
+        <span class="user-name" id="userName">Arthur Borges</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================== -->
+  <!-- ABAS DE NAVEGAÇÃO ENTRE AS 3 TELAS (ETAPA 15 e 16) -->
+  <!-- ========================================== -->
+  <nav class="navigation-tabs">
+    <a href="tela1-odds.html" class="nav-tab">
+      <span>🏟️</span> Tela 1: Lobby & Odds
+    </a>
+    <a href="tela2-betslip.html" class="nav-tab active">
+      <span>📋</span> Tela 2: Detalhes & Bet Slip
+    </a>
+    <a href="tela3-cashout.html" class="nav-tab">
+      <span>💳</span> Tela 3: Carteira & Cash Out
+    </a>
+  </nav>
+
+  <!-- ========================================== -->
+  <!-- CONTEÚDO PRINCIPAL -->
+  <!-- ========================================== -->
+  <main class="main-container">
+    
+    <!-- COLUNA PRINCIPAL: DETALHES DA PARTIDA & MERCADOS -->
+    <section class="matches-column">
+
+      <!-- SELETOR DE PARTIDAS AO VIVO -->
+      <div class="match-tabs-bar" id="matchTabsBar">
+        <button class="match-tab-btn active" id="tabMatch-1" onclick="switchMatch(1)">
+          <span>⚽</span> Flamengo x Palmeiras
+        </button>
+        <button class="match-tab-btn" id="tabMatch-2" onclick="switchMatch(2)">
+          <span>⚽</span> Real Madrid x Barcelona
+        </button>
+        <button class="match-tab-btn" id="tabMatch-3" onclick="switchMatch(3)">
+          <span>🏀</span> Lakers x Celtics
+        </button>
+      </div>
+
+      <!-- ARENA / PLACAR AO VIVO DA PARTIDA SELECIONADA -->
+      <article class="match-arena" id="matchArenaBox">
+        <div class="arena-header">
+          <div id="arenaLeague">⚽ Futebol — Brasileirão Série A</div>
+          <button class="btn-goal-trigger" id="btnGoalTrigger" onclick="triggerCurrentGoal()" title="Forçar gol nesta partida para demonstrar RF-06">
+            ⚽ Simular Gol
+          </button>
+        </div>
+
+        <div class="arena-scoreboard">
+          <!-- Time Casa -->
+          <div class="arena-team">
+            <div class="arena-team-badge" id="arenaBadgeHome">🔴</div>
+            <div class="arena-team-name" id="arenaTeamHome">Flamengo</div>
+          </div>
+
+          <!-- Placar & Tempo -->
+          <div class="arena-score-box">
+            <div class="arena-score-numbers" id="arenaScores">0 - 0</div>
+            <div class="arena-time-badge" id="arenaTimeBadge">⏱️ 18' AO VIVO</div>
+          </div>
+
+          <!-- Time Fora -->
+          <div class="arena-team">
+            <div class="arena-team-badge" id="arenaBadgeAway">🟢</div>
+            <div class="arena-team-name" id="arenaTeamAway">Palmeiras</div>
+          </div>
+        </div>
+
+        <!-- FAIXA DE MERCADO SUSPENSO (RF-06) -->
+        <div id="arenaSuspendedStrip" class="market-suspended-strip" style="display: none; border-radius: var(--radius-sm); margin-top: 0.5rem;">
+          <span>🔒</span> Mercado Temporariamente Suspenso (Gol em andamento)
+        </div>
+
+        <!-- ESTATÍSTICAS AO VIVO DA PARTIDA -->
+        <div class="match-stats-panel">
+          <div class="stats-title">
+            <span>📊</span> Estatísticas em Tempo Real
+          </div>
+
+          <!-- Posse de Bola -->
+          <div class="stat-row">
+            <div class="stat-labels">
+              <span id="statHomePoss">54%</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">Posse de Bola</span>
+              <span id="statAwayPoss">46%</span>
+            </div>
+            <div class="stat-bar-container">
+              <div class="stat-bar-home" id="barHomePoss" style="width: 54%;"></div>
+              <div class="stat-bar-away" id="barAwayPoss" style="width: 46%;"></div>
+            </div>
+          </div>
+
+          <!-- Finalizações -->
+          <div class="stat-row">
+            <div class="stat-labels">
+              <span id="statHomeShots">8</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">Finalizações no Alvo</span>
+              <span id="statAwayShots">5</span>
+            </div>
+            <div class="stat-bar-container">
+              <div class="stat-bar-home" id="barHomeShots" style="width: 61%;"></div>
+              <div class="stat-bar-away" id="barAwayShots" style="width: 39%;"></div>
+            </div>
+          </div>
+
+          <!-- Escanteios -->
+          <div class="stat-row" style="margin-bottom: 0;">
+            <div class="stat-labels">
+              <span id="statHomeCorners">5</span>
+              <span style="color: var(--text-muted); font-size: 0.75rem;">Escanteios</span>
+              <span id="statAwayCorners">3</span>
+            </div>
+            <div class="stat-bar-container">
+              <div class="stat-bar-home" id="barHomeCorners" style="width: 62%;"></div>
+              <div class="stat-bar-away" id="barAwayCorners" style="width: 38%;"></div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- MERCADOS DE APOSTAS DISPONÍVEIS -->
+      <div class="markets-container">
+
+        <!-- MERCADO 1: 1X2 (RESULTADO FINAL) -->
+        <div class="market-box">
+          <div class="market-header">
+            <div class="market-name">
+              <span>🎯</span> Resultado Final (1X2)
+            </div>
+            <span style="font-size: 0.75rem; color: var(--accent-green); font-weight: 700;">Ao Vivo</span>
+          </div>
+
+          <div class="market-odds-grid">
+            <button class="odd-btn" id="btnOdd-CASA" onclick="pickOdd('1X2', 'CASA', this)">
+              <span class="odd-label" id="labelOddHome">1 (Flamengo)</span>
+              <span class="odd-val" id="valOdd-CASA">2.10</span>
+            </button>
+            <button class="odd-btn" id="btnOdd-EMPATE" onclick="pickOdd('1X2', 'EMPATE', this)">
+              <span class="odd-label">X (Empate)</span>
+              <span class="odd-val" id="valOdd-EMPATE">3.20</span>
+            </button>
+            <button class="odd-btn" id="btnOdd-FORA" onclick="pickOdd('1X2', 'FORA', this)">
+              <span class="odd-label" id="labelOddAway">2 (Palmeiras)</span>
+              <span class="odd-val" id="valOdd-FORA">3.40</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- MERCADO 2: TOTAL DE GOLS (MAIS/MENOS 2.5) -->
+        <div class="market-box">
+          <div class="market-header">
+            <div class="market-name">
+              <span>⚽</span> Total de Gols (Mais / Menos 2.5)
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Mercado Adicional</span>
+          </div>
+
+          <div class="market-odds-grid">
+            <button class="odd-btn" id="btnOdd-OVER" onclick="pickOdd('TOTAL_GOLS', 'Mais de 2.5', this)">
+              <span class="odd-label">Mais de 2.5</span>
+              <span class="odd-val" id="valOdd-OVER">1.85</span>
+            </button>
+            <button class="odd-btn" id="btnOdd-UNDER" onclick="pickOdd('TOTAL_GOLS', 'Menos de 2.5', this)">
+              <span class="odd-label">Menos de 2.5</span>
+              <span class="odd-val" id="valOdd-UNDER">1.95</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- MERCADO 3: AMBAS MARCAM -->
+        <div class="market-box">
+          <div class="market-header">
+            <div class="market-name">
+              <span>🔄</span> Ambas as Equipes Marcam
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-dim);">Mercado Adicional</span>
+          </div>
+
+          <div class="market-odds-grid">
+            <button class="odd-btn" id="btnOdd-BTTS_YES" onclick="pickOdd('AMBAS_MARCAM', 'Sim', this)">
+              <span class="odd-label">Sim</span>
+              <span class="odd-val" id="valOdd-BTTS_YES">1.75</span>
+            </button>
+            <button class="odd-btn" id="btnOdd-BTTS_NO" onclick="pickOdd('AMBAS_MARCAM', 'Não', this)">
+              <span class="odd-label">Não</span>
+              <span class="odd-val" id="valOdd-BTTS_NO">2.05</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- COLUNA LATERAL: CADERNETA AVANÇADA (BET SLIP) -->
+    <aside class="sidebar-column">
+      
+      <div class="betslip-card">
+        <div class="betslip-header">
+          <div class="betslip-title">
+            <span>🎟️</span> Caderneta de Apostas (Bet Slip)
+          </div>
+          <div class="betslip-count" id="slipCount">0</div>
+        </div>
+
+        <!-- Estado Vazio -->
+        <div class="betslip-empty-state" id="slipEmpty">
+          <div class="betslip-empty-icon">👈</div>
+          <p>Selecione uma cotação ao lado para montar e submeter seu bilhete de aposta.</p>
+        </div>
+
+        <!-- Conteúdo Ativo do Bet Slip -->
+        <div id="slipActive" style="display: none;">
+          
+          <!-- Alerta de Mudança de Cotação Dinâmica -->
+          <div class="odd-change-banner" id="oddChangeAlert">
+            ⚡ A odd desta seleção mudou em tempo real! Nova odd aplicada.
+          </div>
+
+          <div class="betslip-selected-item">
+            <div class="betslip-item-header">
+              <span class="betslip-item-match" id="slipMatchName">Flamengo vs Palmeiras</span>
+              <button class="betslip-remove-btn" onclick="clearSlip()" title="Remover seleção">✕</button>
+            </div>
+            <div class="betslip-item-market">
+              <span id="slipMarketAndOption">Resultado Final: CASA</span>
+              <span id="slipOddVal" style="color: var(--accent-gold); font-size: 1.15rem; font-weight: 800;">@ 2.10</span>
+            </div>
+          </div>
+
+          <!-- Entrada de Valor da Aposta -->
+          <div class="betslip-inputs">
+            <label class="input-label">Valor da Aposta (R$)</label>
+            <div class="stake-input-wrapper">
+              <span class="stake-currency-prefix">R$</span>
+              <input type="number" id="slipStakeInput" class="stake-input" value="20" min="1" max="1000" step="1" oninput="calculateSlipReturn()">
+            </div>
+
+            <!-- Botões de Atalho de Valor -->
+            <div class="quick-stakes">
+              <button class="btn-quick-stake" onclick="setStake(10)">+R$ 10</button>
+              <button class="btn-quick-stake" onclick="setStake(20)">+R$ 20</button>
+              <button class="btn-quick-stake" onclick="setStake(50)">+R$ 50</button>
+              <button class="btn-quick-stake" onclick="setMaxStake()">Saldo Max</button>
+            </div>
+
+            <!-- Cálculo de Retorno Potencial -->
+            <div class="potential-return-row">
+              <span style="color: var(--text-muted); font-size: 0.85rem;">Retorno Potencial:</span>
+              <span class="potential-return-val" id="slipPotentialReturn">R$ 42,00</span>
+            </div>
+
+            <!-- Mensagem de Erro de Saldo (RNF-02) -->
+            <div id="slipBalanceError" style="color: #ef4444; font-size: 0.78rem; font-weight: 700; margin-bottom: 0.5rem; display: none;">
+              ❌ Saldo insuficiente para esta aposta!
+            </div>
+
+            <!-- Botão de Confirmação (RF-03) -->
+            <button class="btn-place-bet" id="btnConfirmBet" onclick="submitSlipBet()">
+              Confirmar Aposta (PLACE_BET)
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ATALHO PARA CARTEIRA & HISTÓRICO (TELA 3) -->
+      <div class="ranking-section">
+        <div class="ranking-card" style="text-align: center;">
+          <div style="font-size: 1.6rem; margin-bottom: 0.5rem;">💳</div>
+          <div style="font-weight: 800; color: #fff; margin-bottom: 0.35rem;">Minha Carteira & Cash Out</div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.85rem;">
+            Acompanhe suas apostas ativas em tempo real e realize Cash Out imediato.
+          </p>
+          <a href="tela3-cashout.html" style="display: inline-block; background: rgba(0, 230, 118, 0.15); border: 1px solid var(--accent-green); color: var(--accent-green); text-decoration: none; padding: 0.5rem 1rem; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem; transition: all var(--transition-fast);">
+            Ir para Tela 3: Carteira →
+          </a>
+        </div>
+      </div>
+
+    </aside>
+
+  </main>
+
+  <!-- POP-UP DE GOL E SUSPENSÃO DE MERCADO (RF-06) -->
+  <div id="goalPopupOverlay" class="goal-popup-overlay">
+    <div class="goal-popup-card">
+      <div class="goal-popup-badge">⚽ GOOOOOL!</div>
+      <h2 id="goalPopupTitle" class="goal-popup-title">Gol na Partida!</h2>
+      <div id="goalPopupScore" class="goal-popup-score">-</div>
+      <div class="goal-popup-status">
+        <span>🔒</span> Mercado Temporariamente Suspenso (4s)
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE COMPROVANTE DE APOSTA (BET_CONFIRMED) -->
+  <div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 1.75rem; max-width: 420px; width: 90%; box-shadow: 0 0 30px rgba(0, 230, 118, 0.2);">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+        <span style="font-size: 1.5rem;">✅</span>
+        <h3 style="font-size: 1.2rem; color: #fff;">Aposta Confirmada!</h3>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem; font-size: 0.88rem; line-height: 1.6;">
+        <div><strong>Bilhete:</strong> <span id="modalTicketId" style="color: var(--accent-gold); font-family: monospace;">#0</span></div>
+        <div><strong>Partida:</strong> <span id="modalTicketMatch">-</span></div>
+        <div><strong>Seleção:</strong> <span id="modalTicketSelection">-</span></div>
+        <div><strong>Valor Apostado:</strong> <span id="modalTicketStake" style="color: var(--accent-green);">R$ 0,00</span></div>
+        <div><strong>Retorno Potencial:</strong> <span id="modalTicketReturn" style="color: var(--accent-gold); font-weight: 700;">R$ 0,00</span></div>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <button onclick="closeTicketModal()" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; padding: 0.6rem; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;">
+          Nova Aposta
+        </button>
+        <a href="tela3-cashout.html" style="flex: 1; text-align: center; background: var(--accent-green); border: none; color: #000; text-decoration: none; padding: 0.6rem; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.88rem;">
+          Ver Carteira
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="js/websocket.js"></script>
+  <script>
+    // Configurações das Partidas
+    const MATCH_DATA = {
+      1: {
+        id: 1,
+        sport: '⚽ Futebol — Brasileirão Série A',
+        name: 'Flamengo vs Palmeiras',
+        home: 'Flamengo',
+        away: 'Palmeiras',
+        badgeHome: '🔴',
+        badgeAway: '🟢',
+        odds: { CASA: 2.10, EMPATE: 3.20, FORA: 3.40, OVER: 1.85, UNDER: 1.95, BTTS_YES: 1.75, BTTS_NO: 2.05 },
+        stats: { homePoss: 54, awayPoss: 46, homeShots: 8, awayShots: 5, homeCorners: 5, awayCorners: 3 }
+      },
+      2: {
+        id: 2,
+        sport: '⚽ Futebol — La Liga Espanhola',
+        name: 'Real Madrid vs Barcelona',
+        home: 'Real Madrid',
+        away: 'Barcelona',
+        badgeHome: '⚪',
+        badgeAway: '🔵',
+        odds: { CASA: 2.45, EMPATE: 2.90, FORA: 2.80, OVER: 1.90, UNDER: 1.90, BTTS_YES: 1.65, BTTS_NO: 2.15 },
+        stats: { homePoss: 51, awayPoss: 49, homeShots: 9, awayShots: 7, homeCorners: 6, awayCorners: 4 }
+      },
+      3: {
+        id: 3,
+        sport: '🏀 Basquete — NBA Temporada Regular',
+        name: 'LA Lakers vs Boston Celtics',
+        home: 'LA Lakers',
+        away: 'Boston Celtics',
+        badgeHome: '🟡',
+        badgeAway: '☘️',
+        odds: { CASA: 2.15, EMPATE: 12.00, FORA: 1.70, OVER: 1.90, UNDER: 1.90, BTTS_YES: 1.80, BTTS_NO: 1.95 },
+        stats: { homePoss: 50, awayPoss: 50, homeShots: 42, awayShots: 40, homeCorners: 0, awayCorners: 0 }
+      }
+    };
+
+    let currentMatchId = 1;
+    let currentSlip = null;
+
+    // Detectar matchId vindo da query string da URL (ex: tela2-betslip.html?matchId=2)
+    const urlParams = new URLSearchParams(window.location.search);
+    const paramMatchId = parseInt(urlParams.get('matchId'), 10);
+    if ([1, 2, 3].includes(paramMatchId)) {
+      currentMatchId = paramMatchId;
+    }
+
+    function switchMatch(matchId) {
+      currentMatchId = matchId;
+      document.querySelectorAll('.match-tab-btn').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`tabMatch-${matchId}`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const data = MATCH_DATA[matchId];
+      if (!data) return;
+
+      document.getElementById('arenaLeague').textContent = data.sport;
+      document.getElementById('arenaTeamHome').textContent = data.home;
+      document.getElementById('arenaTeamAway').textContent = data.away;
+      document.getElementById('arenaBadgeHome').textContent = data.badgeHome;
+      document.getElementById('arenaBadgeAway').textContent = data.badgeAway;
+      document.getElementById('labelOddHome').textContent = `1 (${data.home})`;
+      document.getElementById('labelOddAway').textContent = `2 (${data.away})`;
+
+      // Atualiza odds visíveis
+      applyOddsToUI(data.odds);
+
+      // Limpa seleção ao trocar de jogo
+      clearSlip();
+
+      // Solicita odds atualizadas do jogo selecionado via WebSocket
+      window.sendWs('GET_ODDS', { matchId });
+    }
+
+    function applyOddsToUI(odds) {
+      if (!odds) return;
+      if (odds.CASA) document.getElementById('valOdd-CASA').textContent = Number(odds.CASA).toFixed(2);
+      if (odds.EMPATE) document.getElementById('valOdd-EMPATE').textContent = Number(odds.EMPATE).toFixed(2);
+      if (odds.FORA) document.getElementById('valOdd-FORA').textContent = Number(odds.FORA).toFixed(2);
+      if (odds.OVER) document.getElementById('valOdd-OVER').textContent = Number(odds.OVER).toFixed(2);
+      if (odds.UNDER) document.getElementById('valOdd-UNDER').textContent = Number(odds.UNDER).toFixed(2);
+      if (odds.BTTS_YES) document.getElementById('valOdd-BTTS_YES').textContent = Number(odds.BTTS_YES).toFixed(2);
+      if (odds.BTTS_NO) document.getElementById('valOdd-BTTS_NO').textContent = Number(odds.BTTS_NO).toFixed(2);
+    }
+
+    function pickOdd(market, option, buttonEl) {
+      document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
+      buttonEl.classList.add('selected');
+
+      const oddVal = parseFloat(buttonEl.querySelector('.odd-val').textContent) || 2.00;
+      const match = MATCH_DATA[currentMatchId];
+
+      currentSlip = {
+        matchId: currentMatchId,
+        matchName: match.name,
+        market,
+        option,
+        odd: oddVal
+      };
+
+      document.getElementById('slipEmpty').style.display = 'none';
+      document.getElementById('slipActive').style.display = 'block';
+      document.getElementById('slipCount').textContent = '1';
+      document.getElementById('oddChangeAlert').style.display = 'none';
+
+      document.getElementById('slipMatchName').textContent = match.name;
+      document.getElementById('slipMarketAndOption').textContent = `${market}: ${option}`;
+      document.getElementById('slipOddVal').textContent = `@ ${oddVal.toFixed(2)}`;
+
+      calculateSlipReturn();
+    }
+
+    function clearSlip() {
+      currentSlip = null;
+      document.querySelectorAll('.odd-btn').forEach(b => b.classList.remove('selected'));
+      document.getElementById('slipEmpty').style.display = 'block';
+      document.getElementById('slipActive').style.display = 'none';
+      document.getElementById('slipCount').textContent = '0';
+      document.getElementById('oddChangeAlert').style.display = 'none';
+    }
+
+    function setStake(amount) {
+      const input = document.getElementById('slipStakeInput');
+      input.value = amount;
+      calculateSlipReturn();
+    }
+
+    function setMaxStake() {
+      const walletText = document.getElementById('walletAmount').textContent;
+      const cleanVal = walletText.replace('R$', '').trim().replace('.', '').replace(',', '.');
+      const maxVal = Math.floor(parseFloat(cleanVal) || 0);
+      document.getElementById('slipStakeInput').value = Math.max(1, maxVal);
+      calculateSlipReturn();
+    }
+
+    function calculateSlipReturn() {
+      if (!currentSlip) return;
+      const stake = parseFloat(document.getElementById('slipStakeInput').value) || 0;
+      const ret = stake * currentSlip.odd;
+      document.getElementById('slipPotentialReturn').textContent = `R$ ${ret.toFixed(2)}`;
+
+      // Validação de saldo em tempo real (RNF-02)
+      const walletText = document.getElementById('walletAmount').textContent;
+      const currentSaldo = parseFloat(walletText.replace('R$', '').trim().replace('.', '').replace(',', '.')) || 0;
+      const errEl = document.getElementById('slipBalanceError');
+      const btn = document.getElementById('btnConfirmBet');
+
+      if (stake > currentSaldo) {
+        errEl.style.display = 'block';
+        btn.disabled = true;
+      } else {
+        errEl.style.display = 'none';
+        btn.disabled = false;
+      }
+    }
+
+    function submitSlipBet() {
+      if (!currentSlip) return;
+      const stake = parseFloat(document.getElementById('slipStakeInput').value) || 0;
+
+      if (stake <= 0) {
+        alert('Informe um valor de aposta válido.');
+        return;
+      }
+
+      const btn = document.getElementById('btnConfirmBet');
+      btn.disabled = true;
+      btn.textContent = 'Enviando bilhete ao WebSocket...';
+
+      // Dispara comando PLACE_BET (RF-03)
+      window.sendWs('PLACE_BET', {
+        matchId: currentSlip.matchId,
+        mercadoId: currentSlip.market,
+        selecao: currentSlip.option,
+        odd: currentSlip.odd,
+        valor: stake
+      });
+    }
+
+    function closeTicketModal() {
+      document.getElementById('ticketModal').style.display = 'none';
+      clearSlip();
+    }
+
+    function triggerCurrentGoal() {
+      window.sendWs('TRIGGER_GOAL', { matchId: currentMatchId });
+    }
+
+    // Ouvintes de Eventos WebSocket específicos para a Tela 2
+    window.addEventListener('probabet:MATCH_UPDATE', (e) => {
+      const m = e.detail;
+      if (m.matchId === currentMatchId || m.id_partida === currentMatchId) {
+        const scoresEl = document.getElementById('arenaScores');
+        const timeEl = document.getElementById('arenaTimeBadge');
+        const strip = document.getElementById('arenaSuspendedStrip');
+        const btnBet = document.getElementById('btnConfirmBet');
+
+        const pCasa = m.placarCasa !== undefined ? m.placarCasa : m.placar_casa;
+        const pFora = m.placarFora !== undefined ? m.placarFora : m.placar_fora;
+        const min = m.minuto !== undefined ? m.minuto : m.minuto_jogo;
+        const status = m.status || m.status_partida;
+
+        if (scoresEl && pCasa !== undefined) scoresEl.textContent = `${pCasa} - ${pFora}`;
+        if (timeEl && min !== undefined) {
+          if (status === 'ENCERRADA') {
+            timeEl.textContent = '⏱️ ENCERRADA';
+            timeEl.style.background = 'rgba(239, 68, 68, 0.2)';
+          } else if (status === 'SUSPENSA') {
+            timeEl.textContent = '⚠️ MERCADO SUSPENSO';
+            timeEl.style.background = 'rgba(245, 158, 11, 0.2)';
+            if (strip) strip.style.display = 'flex';
+            if (btnBet) btnBet.disabled = true;
+          } else {
+            timeEl.textContent = `⏱️ ${min}' AO VIVO`;
+            timeEl.style.background = 'rgba(239, 68, 68, 0.15)';
+            if (strip) strip.style.display = 'none';
+            if (btnBet) btnBet.disabled = false;
+          }
+        }
+      }
+    });
+
+    window.addEventListener('probabet:ODDS_UPDATE', (e) => {
+      const payload = e.detail;
+      if (payload.matchId === currentMatchId && payload.odds) {
+        // Se a odd da seleção atual do bilhete mudou, alerta o apostador
+        if (currentSlip && currentSlip.market === '1X2' && payload.odds[currentSlip.option]) {
+          const novaOdd = parseFloat(payload.odds[currentSlip.option]);
+          if (novaOdd !== currentSlip.odd) {
+            currentSlip.odd = novaOdd;
+            document.getElementById('slipOddVal').textContent = `@ ${novaOdd.toFixed(2)}`;
+            const alertEl = document.getElementById('oddChangeAlert');
+            alertEl.style.display = 'block';
+            alertEl.textContent = `⚡ A cotação mudou para @ ${novaOdd.toFixed(2)}! Retorno recalculado.`;
+            calculateSlipReturn();
+          }
+        }
+        applyOddsToUI(payload.odds);
+      }
+    });
+
+    window.addEventListener('probabet:BET_CONFIRMED', (e) => {
+      const payload = e.detail;
+      const btn = document.getElementById('btnConfirmBet');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Aposta (PLACE_BET)';
+      }
+
+      // Exibe Comprovante Digital
+      document.getElementById('modalTicketId').textContent = `#${payload.bet?.idAposta || '1'}`;
+      document.getElementById('modalTicketMatch').textContent = payload.bet?.partidaNome || '-';
+      document.getElementById('modalTicketSelection').textContent = `${payload.bet?.selecao} (@ ${payload.bet?.oddMomento})`;
+      document.getElementById('modalTicketStake').textContent = `R$ ${payload.bet?.valorApostado?.toFixed(2)}`;
+      document.getElementById('modalTicketReturn').textContent = `R$ ${payload.bet?.retornoPotencial?.toFixed(2)}`;
+      document.getElementById('ticketModal').style.display = 'flex';
+    });
+
+    window.addEventListener('probabet:BET_REJECTED', (e) => {
+      const btn = document.getElementById('btnConfirmBet');
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Confirmar Aposta (PLACE_BET)';
+      }
+      alert(`❌ Aposta rejeitada pelo servidor:\n${e.detail.message}`);
+    });
+
+    // Inicia na partida configurada
+    window.addEventListener('DOMContentLoaded', () => {
+      switchMatch(currentMatchId);
+    });
+  </script>
+</body>
+</html>
