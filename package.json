@@ -1,0 +1,19 @@
+{
+  "name": "probabet",
+  "version": "1.0.0",
+  "description": "ProbaBet - Plataforma de Apostas Esportivas em Tempo Real com WebSocket",
+  "main": "backend/src/server.js",
+  "scripts": {
+    "start": "node backend/src/server.js",
+    "build": "cd backend && npm install",
+    "test": "cd backend && npm run test:ws"
+  },
+  "keywords": [
+    "websocket",
+    "bets",
+    "sportsbook",
+    "realtime"
+  ],
+  "author": "Arthur Borges Rodrigues & João Lucas Tavares Silva",
+  "license": "ISC"
+}

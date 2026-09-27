@@ -227,6 +227,12 @@ function handleServerEvent(payload) {
       logEvent('LIQUIDAÇÃO', `🏁 Partida #${payload.matchId} (${payload.placarFinal}) encerrada. GREEN: ${payload.countGreen} | RED: ${payload.countRed}. Total pago: R$ ${Number(payload.totalPago).toFixed(2)}`, 'ev-green');
       break;
 
+    case 'RANKING_UPDATE':
+      if (Array.isArray(payload.ranking)) {
+        renderRankingUI(payload.ranking);
+      }
+      break;
+
     case 'BET_REJECTED':
       logEvent('REJEITADA', `❌ ${payload.message}`, 'ev-red');
       if (typeof window.onBetRejected === 'function') {
@@ -537,3 +543,42 @@ window.requestCashOut = function(betId, offerVal, btnEl) {
     requestedValue: parseFloat(offerVal)
   });
 };
+
+/**
+ * Renderiza o ranking da sessão em tempo real (RF-08)
+ * @param {Array<object>} ranking
+ */
+function renderRankingUI(ranking) {
+  const listEl = document.getElementById('rankingList');
+  if (!listEl) return;
+
+  if (!ranking || ranking.length === 0) {
+    listEl.innerHTML = '<div class="ranking-empty">Nenhum apostador no ranking.</div>';
+    return;
+  }
+
+  listEl.innerHTML = '';
+  const myId = currentApostador?.id || currentApostador?.id_apostador || 1;
+
+  ranking.forEach((user, index) => {
+    const pos = index + 1;
+    const isMe = user.id_apostador === myId;
+    const posClass = pos === 1 ? 'pos-1' : pos === 2 ? 'pos-2' : pos === 3 ? 'pos-3' : '';
+    const posBadge = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : `${pos}º`;
+
+    const item = document.createElement('div');
+    item.className = `ranking-item ${isMe ? 'me' : ''}`;
+    item.innerHTML = `
+      <div class="ranking-user-info">
+        <span class="ranking-pos ${posClass}">${posBadge}</span>
+        <span class="ranking-name" title="${user.nome_completo}">
+          ${user.nome_completo}
+          ${isMe ? '<span class="you-tag">VOCÊ</span>' : ''}
+        </span>
+      </div>
+      <span class="ranking-saldo">R$ ${Number(user.saldo_ficticio).toFixed(2)}</span>
+    `;
+    listEl.appendChild(item);
+  });
+}
+

@@ -19,7 +19,28 @@ function initDefaultMemoryUsers() {
       id_apostador: 2,
       cpf_usuario: '555.666.777-88',
       nome_completo: 'João Lucas Tavares Silva',
-      saldo_ficticio: INITIAL_SALDO,
+      saldo_ficticio: 105.00,
+      data_cadastro: new Date()
+    });
+    memoryApostadores.set(3, {
+      id_apostador: 3,
+      cpf_usuario: '333.444.555-66',
+      nome_completo: 'Lucas Almeida',
+      saldo_ficticio: 120.50,
+      data_cadastro: new Date()
+    });
+    memoryApostadores.set(4, {
+      id_apostador: 4,
+      cpf_usuario: '444.555.666-77',
+      nome_completo: 'Gabriel Santos',
+      saldo_ficticio: 95.00,
+      data_cadastro: new Date()
+    });
+    memoryApostadores.set(5, {
+      id_apostador: 5,
+      cpf_usuario: '555.666.777-88',
+      nome_completo: 'Mateus Lima',
+      saldo_ficticio: 85.00,
       data_cadastro: new Date()
     });
   }
@@ -139,6 +160,9 @@ class ApostadorService {
     user.saldo_ficticio = novoSaldo;
     memoryApostadores.set(id, user);
 
+    // [RF-08] Atualização contínua do ranking em tempo real
+    this.broadcastRanking();
+
     return novoSaldo;
   }
 
@@ -170,6 +194,9 @@ class ApostadorService {
     user.saldo_ficticio = novoSaldo;
     memoryApostadores.set(id, user);
 
+    // [RF-08] Atualização contínua do ranking em tempo real
+    this.broadcastRanking();
+
     return novoSaldo;
   }
 
@@ -193,6 +220,21 @@ class ApostadorService {
         nome_completo: u.nome_completo,
         saldo_ficticio: parseFloat(u.saldo_ficticio.toFixed(2))
       }));
+  }
+
+  /**
+   * Transmite o ranking da sessão em broadcast via WebSocket (RF-08)
+   */
+  async broadcastRanking() {
+    try {
+      const { broadcast } = require('../websocket');
+      const ranking = await this.getRanking();
+      if (typeof broadcast === 'function') {
+        broadcast('RANKING_UPDATE', { ranking });
+      }
+    } catch (e) {
+      // Ignora erro se websocket não estiver inicializado
+    }
   }
 }
 

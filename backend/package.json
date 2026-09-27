@@ -14,6 +14,7 @@
     "test:cashout": "node src/services/test-cashout.js",
     "test:goal": "node src/services/test-goal-suspension.js",
     "test:settlement": "node src/services/test-settlement.js",
+    "test:ranking": "node src/services/test-ranking.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [

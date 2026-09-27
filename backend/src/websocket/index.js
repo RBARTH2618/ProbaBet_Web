@@ -162,6 +162,12 @@ function initWebSocketServer(httpServer) {
       motivo: 'SALDO_INICIAL'
     });
 
+    // [RF-08] Transmitir ranking da sessão em tempo real
+    const rankingInicial = await apostadorService.getRanking();
+    sendToClient(ws, 'RANKING_UPDATE', {
+      ranking: rankingInicial
+    });
+
     // Recepção e roteamento de mensagens
     ws.on('message', async (data) => {
       await handleMessage(ws, data, clientInfo);
