@@ -3,10 +3,10 @@
  * Responsável pela comunicação bidirecional com o backend Node.js
  */
 
-const WS_PORT = window.location.port || '3000';
+const WS_PORT = window.location.port ? `:${window.location.port}` : '';
 const WS_HOST = window.location.hostname || 'localhost';
 const WS_PROTOCOL = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const WS_URL = `${WS_PROTOCOL}//${WS_HOST}:${WS_PORT}?apostadorId=1`;
+const WS_URL = `${WS_PROTOCOL}//${WS_HOST}${WS_PORT}?apostadorId=1`;
 
 let socket = null;
 let reconnectTimer = null;
