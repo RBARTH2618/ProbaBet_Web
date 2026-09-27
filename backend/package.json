@@ -16,6 +16,7 @@
     "test:settlement": "node src/services/test-settlement.js",
     "test:ranking": "node src/services/test-ranking.js",
     "test:e2e": "node src/services/test-e2e-screens.js",
+    "test": "node src/services/run-all-tests.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [
