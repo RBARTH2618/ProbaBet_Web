@@ -875,6 +875,38 @@ body {
   width: 100%;
 }
 
+.badge-green {
+  display: inline-block;
+  background: rgba(0, 230, 118, 0.2);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 230, 118, 0.4);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  width: 100%;
+  animation: pulseGreen 1.5s ease infinite alternate;
+}
+
+@keyframes pulseGreen {
+  from { box-shadow: 0 0 5px rgba(0, 230, 118, 0.2); }
+  to { box-shadow: 0 0 15px rgba(0, 230, 118, 0.6); }
+}
+
+.badge-red {
+  display: inline-block;
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--accent-red);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.6rem;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  width: 100%;
+}
+
 /* ============================================================
    BANNER DE GOL E SUSPENSÃO DE MERCADO (ETAPA 12 - RF-06)
    ============================================================ */

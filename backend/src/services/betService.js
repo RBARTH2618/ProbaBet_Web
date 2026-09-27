@@ -248,6 +248,34 @@ class BetService extends EventEmitter {
     }
     return memoryBets.get(parseInt(betId, 10)) || null;
   }
+
+  /**
+   * Retorna todas as apostas ativas vinculadas a uma partida (para liquidação RF-07)
+   * @param {number} matchId 
+   * @returns {Promise<Array<object>>}
+   */
+  async getActiveBetsByMatch(matchId) {
+    const id = parseInt(matchId, 10);
+    let dbBets = [];
+    try {
+      dbBets = await BilheteAposta.findActiveByPartida(id);
+    } catch (e) {
+      // Fallback
+    }
+
+    const memBets = Array.from(memoryBets.values())
+      .filter(b => (b.matchId === id || b.id_partida === id) && (b.status === 'ATIVA' || b.status_aposta === 'ATIVA'));
+
+    const combined = [...(dbBets || [])];
+    for (const mb of memBets) {
+      const bId = mb.idAposta || mb.id_aposta;
+      if (!combined.some(b => (b.id_aposta || b.idAposta) === bId)) {
+        combined.push(mb);
+      }
+    }
+
+    return combined;
+  }
 }
 
 module.exports = new BetService();

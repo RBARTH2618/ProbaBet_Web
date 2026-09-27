@@ -13,6 +13,7 @@
     "test:bet": "node src/services/test-place-bet.js",
     "test:cashout": "node src/services/test-cashout.js",
     "test:goal": "node src/services/test-goal-suspension.js",
+    "test:settlement": "node src/services/test-settlement.js",
     "db:setup": "node src/database/setup-db.js"
   },
   "keywords": [

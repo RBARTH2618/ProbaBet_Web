@@ -75,5 +75,9 @@ server.listen(PORT, async () => {
   // [ETAPA 11] Conectar o Motor de Cash Out aos eventos de Odds e Apostas
   const cashoutService = require('./services/cashoutService');
   cashoutService.bindEvents();
+
+  // [ETAPA 13] Conectar o Motor de Liquidação Automática de Apostas (RF-07)
+  const settlementService = require('./services/settlementService');
+  settlementService.bindEvents();
 });
 

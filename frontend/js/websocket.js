@@ -207,6 +207,26 @@ function handleServerEvent(payload) {
       alert(`❌ CASH OUT REJEITADO:\n${payload.message}`);
       break;
 
+    case 'BET_SETTLED':
+      const settledBet = activeBetsMap.get(payload.betId);
+      if (settledBet) {
+        settledBet.status = payload.status;
+        settledBet.status_aposta = payload.status;
+        settledBet.valorGanho = payload.retorno || payload.valorGanho;
+        renderActiveBets();
+      }
+      if (payload.status === 'GREEN') {
+        logEvent('GREEN', `🟢 Parabéns! Bilhete #${payload.betId} VENCEU! Prêmio creditado: R$ ${Number(payload.retorno).toFixed(2)}`, 'ev-green');
+        playGoalSound();
+      } else {
+        logEvent('RED', `🔴 Bilhete #${payload.betId} finalizado como RED (Não premiado).`, 'ev-red');
+      }
+      break;
+
+    case 'SETTLEMENT_COMPLETED':
+      logEvent('LIQUIDAÇÃO', `🏁 Partida #${payload.matchId} (${payload.placarFinal}) encerrada. GREEN: ${payload.countGreen} | RED: ${payload.countRed}. Total pago: R$ ${Number(payload.totalPago).toFixed(2)}`, 'ev-green');
+      break;
+
     case 'BET_REJECTED':
       logEvent('REJEITADA', `❌ ${payload.message}`, 'ev-red');
       if (typeof window.onBetRejected === 'function') {
@@ -445,6 +465,11 @@ function renderActiveBets() {
     if (status === 'CASH_OUT') {
       const finalVal = bet.cashoutFinal ? Number(bet.cashoutFinal).toFixed(2) : offerVal;
       actionHtml = `<div class="badge-cashed-out">✓ CASH OUT REALIZADO: R$ ${finalVal}</div>`;
+    } else if (status === 'GREEN') {
+      const winVal = bet.valorGanho ? Number(bet.valorGanho).toFixed(2) : retornoPotencial;
+      actionHtml = `<div class="badge-green">🟢 VENCEDORA (GREEN): + R$ ${winVal}</div>`;
+    } else if (status === 'RED') {
+      actionHtml = `<div class="badge-red">🔴 NÃO PREMIADA (RED)</div>`;
     } else {
       actionHtml = `
         <div class="cashout-control">
