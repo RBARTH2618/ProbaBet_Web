@@ -17,6 +17,11 @@ app.use(express.json());
 const frontendPath = path.join(__dirname, '../../frontend');
 app.use(express.static(frontendPath));
 
+// Rota raiz garantindo carregamento de tela1-odds.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(frontendPath, 'tela1-odds.html'));
+});
+
 const matchSimulatorService = require('./services/matchSimulatorService');
 
 // Rota de verificação de integridade (Healthcheck)
@@ -47,12 +52,12 @@ const server = http.createServer(app);
 // Inicialização do Servidor WebSocket modular acoplado ao servidor HTTP
 const wss = initWebSocketServer(server);
 
-// Inicialização do servidor
-server.listen(PORT, async () => {
+// Inicialização do servidor com binding em 0.0.0.0 para compatibilidade em nuvem (Render)
+server.listen(PORT, '0.0.0.0', async () => {
   console.log(`====================================================`);
   console.log(`  ProbaBet - Servidor de Apostas em Tempo Real`);
-  console.log(`  HTTP Server:      http://localhost:${PORT}`);
-  console.log(`  WebSocket Server: ws://localhost:${PORT}`);
+  console.log(`  HTTP Server:      http://0.0.0.0:${PORT}`);
+  console.log(`  WebSocket Server: ws://0.0.0.0:${PORT}`);
   console.log(`====================================================`);
 
   // Verificação de conectividade com PostgreSQL no startup
