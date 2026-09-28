@@ -97,7 +97,8 @@
           <div class="match-header">
             <div class="match-sport-league">
               <span>⚽</span> Futebol — Brasileirão Série A
-              <button class="btn-goal-trigger" onclick="triggerGoal(1)" title="Forçar gol nesta partida para demonstrar RF-06 ao professor">⚽ Simular Gol</button>
+              <button class="btn-goal-trigger" onclick="triggerGoal(1)" title="Forçar gol nesta partida (RF-06)">⚽ Gol</button>
+              <button class="btn-goal-trigger" onclick="finishMatch(1)" title="Encerra a partida e liquida automaticamente os bilhetes (RF-07)">🏁 Liquidar</button>
               <a href="tela2-betslip.html?matchId=1" class="btn-goal-trigger" style="text-decoration: none;" title="Abrir Tela 2 com estatísticas completas e mais mercados">🔍 Detalhes</a>
             </div>
             <div class="match-time">⏱️ 18' 1T</div>
@@ -136,7 +137,8 @@
           <div class="match-header">
             <div class="match-sport-league">
               <span>⚽</span> Futebol — La Liga El Clásico
-              <button class="btn-goal-trigger" onclick="triggerGoal(2)" title="Forçar gol nesta partida para demonstrar RF-06 ao professor">⚽ Simular Gol</button>
+              <button class="btn-goal-trigger" onclick="triggerGoal(2)" title="Forçar gol nesta partida (RF-06)">⚽ Gol</button>
+              <button class="btn-goal-trigger" onclick="finishMatch(2)" title="Encerra a partida e liquida automaticamente os bilhetes (RF-07)">🏁 Liquidar</button>
               <a href="tela2-betslip.html?matchId=2" class="btn-goal-trigger" style="text-decoration: none;" title="Abrir Tela 2 com estatísticas completas e mais mercados">🔍 Detalhes</a>
             </div>
             <div class="match-time">⏱️ 42' 1T</div>
@@ -175,6 +177,7 @@
           <div class="match-header">
             <div class="match-sport-league">
               <span>🏀</span> Basquete — NBA Temporada Regular
+              <button class="btn-goal-trigger" onclick="finishMatch(3)" title="Encerra a partida e liquida automaticamente os bilhetes (RF-07)">🏁 Liquidar</button>
               <a href="tela2-betslip.html?matchId=3" class="btn-goal-trigger" style="text-decoration: none;" title="Abrir Tela 2 com estatísticas completas e mais mercados">🔍 Detalhes</a>
             </div>
             <div class="match-time">⏱️ 32' 3Q</div>
@@ -394,6 +397,11 @@
     function triggerGoal(matchId) {
       window.sendWs('TRIGGER_GOAL', { matchId });
       logEvent('SIMULADOR', `Disparado evento manual de Gol para a partida #${matchId} (RF-06).`, 'ev-blue');
+    }
+
+    function finishMatch(matchId) {
+      window.sendWs('FINISH_MATCH', { matchId });
+      logEvent('SIMULADOR', `Encerrada a partida #${matchId} para Liquidação Automática (RF-07).`, 'ev-green');
     }
   </script>
 

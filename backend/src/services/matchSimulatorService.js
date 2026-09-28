@@ -286,6 +286,60 @@ class MatchSimulatorService extends EventEmitter {
   }
 
   /**
+   * Força o encerramento imediato de uma partida e dispara a liquidação de apostas (RF-07)
+   */
+  triggerManualFinish(partidaId) {
+    const id = parseInt(partidaId, 10);
+    const match = this.matches.get(id);
+    if (!match) return false;
+
+    const { broadcast } = require('../websocket');
+    match.minuto_jogo = match.tempo_maximo;
+    match.status_partida = 'ENCERRADA';
+
+    console.log(`[Simulador] Partida ${match.id_partida} (${match.time_casa} x ${match.time_fora}) ENCERRADA MANUALMENTE! Placar: ${match.placar_casa} x ${match.placar_fora}`);
+
+    // Emite evento de partida finalizada (dispara settlementService RF-07)
+    this.emit('match_finished', match);
+
+    broadcast('MATCH_FINISHED', {
+      matchId: match.id_partida,
+      placarCasa: match.placar_casa,
+      placarFora: match.placar_fora,
+      status: 'ENCERRADA'
+    });
+
+    broadcast('MATCH_UPDATE', {
+      matchId: match.id_partida,
+      minuto: match.tempo_maximo,
+      placarCasa: match.placar_casa,
+      placarFora: match.placar_fora,
+      status: 'ENCERRADA'
+    });
+
+    // Auto-recomeça nova rodada após 12 segundos para manter a plataforma sempre jogável
+    setTimeout(() => {
+      if (match.status_partida === 'ENCERRADA') {
+        console.log(`[Simulador] 🔄 Nova rodada para a partida ${match.id_partida} (${match.time_casa} x ${match.time_fora})...`);
+        match.minuto_jogo = 0;
+        match.placar_casa = 0;
+        match.placar_fora = 0;
+        match.status_partida = 'AO_VIVO';
+        broadcast('MATCH_UPDATE', {
+          matchId: match.id_partida,
+          minuto: 0,
+          placarCasa: 0,
+          placarFora: 0,
+          status: 'AO_VIVO'
+        });
+        this.emit('match_tick', match);
+      }
+    }, 12000);
+
+    return true;
+  }
+
+  /**
    * Reinicia manualmente todas as partidas para novo ciclo ao vivo com 0 minutos e placar 0 x 0
    */
   resetAllMatches() {

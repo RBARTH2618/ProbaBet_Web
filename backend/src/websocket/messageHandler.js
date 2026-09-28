@@ -169,6 +169,13 @@ registerHandler('TRIGGER_GOAL', async (ws, payload, clientInfo) => {
   matchSimulatorService.triggerManualGoal(matchId, autor);
 });
 
+// [RF-07] Tratador para forçar encerramento e liquidação da partida
+registerHandler('FINISH_MATCH', async (ws, payload, clientInfo) => {
+  const matchSimulatorService = require('../services/matchSimulatorService');
+  const matchId = payload.matchId || payload.idPartida || 1;
+  matchSimulatorService.triggerManualFinish(matchId);
+});
+
 // [RF-05 / RNF-01] Tratador para solicitação de encerramento antecipado (CASH_OUT)
 registerHandler('CASH_OUT', async (ws, payload, clientInfo) => {
   const { sendToClient } = require('./index');

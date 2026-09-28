@@ -79,9 +79,14 @@
       <article class="match-arena" id="matchArenaBox">
         <div class="arena-header">
           <div id="arenaLeague">⚽ Futebol — Brasileirão Série A</div>
-          <button class="btn-goal-trigger" id="btnGoalTrigger" onclick="triggerCurrentGoal()" title="Forçar gol nesta partida para demonstrar RF-06">
-            ⚽ Simular Gol
-          </button>
+          <div style="display: flex; gap: 0.5rem;">
+            <button class="btn-goal-trigger" id="btnGoalTrigger" onclick="triggerCurrentGoal()" title="Forçar gol nesta partida (RF-06)">
+              ⚽ Simular Gol
+            </button>
+            <button class="btn-goal-trigger" onclick="finishCurrentMatch()" title="Encerra a partida e liquida automaticamente os bilhetes (RF-07)">
+              🏁 Encerrar & Liquidar
+            </button>
+          </div>
         </div>
 
         <div class="arena-scoreboard">
@@ -546,6 +551,10 @@
 
     function triggerCurrentGoal() {
       window.sendWs('TRIGGER_GOAL', { matchId: currentMatchId });
+    }
+
+    function finishCurrentMatch() {
+      window.sendWs('FINISH_MATCH', { matchId: currentMatchId });
     }
 
     // Ouvintes de Eventos WebSocket específicos para a Tela 2
