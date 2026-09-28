@@ -36,7 +36,7 @@
   box-sizing: border-box;
 }
 
-body {
+html, body {
   font-family: var(--font-family);
   background-color: var(--bg-primary);
   color: var(--text-main);
@@ -44,6 +44,7 @@ body {
   display: flex;
   flex-direction: column;
   overflow-x: hidden;
+  max-width: 100%;
 }
 
 /* ============================================================
@@ -199,12 +200,22 @@ body {
 /* ============================================================
    NAVEGAÇÃO POR TELAS / ABAS
    ============================================================ */
+.navigation-tabs,
 .nav-tabs-bar {
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-color);
   padding: 0 2rem;
   display: flex;
   gap: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.navigation-tabs::-webkit-scrollbar,
+.nav-tabs-bar::-webkit-scrollbar {
+  display: none;
 }
 
 .nav-tab {
@@ -1628,4 +1639,289 @@ body {
 .profit-green { color: var(--accent-green); }
 .profit-red { color: #ef4444; }
 .profit-gold { color: var(--accent-gold); }
+
+/* ============================================================
+   RESPONSIVIDADE E WEBMOBILE (TABLETS & SMARTPHONES)
+   ============================================================ */
+
+/* TABLETS E TELAS MÉDIAS (max-width: 1024px) */
+@media (max-width: 1024px) {
+  .main-container {
+    grid-template-columns: 1fr;
+    padding: 1.25rem;
+    gap: 1.5rem;
+  }
+
+  .sidebar-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+  }
+}
+
+/* SMARTPHONES E TELAS MOBILE (max-width: 768px) */
+@media (max-width: 768px) {
+  /* Navbar Mobile */
+  .navbar {
+    padding: 0.65rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .logo-text {
+    font-size: 1.25rem;
+  }
+
+  .header-status-area {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .ws-status-badge {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  .wallet-badge {
+    padding: 0.35rem 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .wallet-amount {
+    font-size: 1rem;
+  }
+
+  .user-profile {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.78rem;
+  }
+
+  /* Abas de Navegação das Telas */
+  .navigation-tabs,
+  .nav-tabs-bar {
+    padding: 0.35rem 0.75rem;
+    gap: 0.35rem;
+  }
+
+  .nav-tab {
+    padding: 0.65rem 0.85rem;
+    font-size: 0.8rem;
+    flex-shrink: 0;
+  }
+
+  /* Container Principal */
+  .main-container {
+    padding: 1rem 0.75rem;
+    gap: 1.25rem;
+  }
+
+  /* Banner de Status */
+  .status-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .status-banner > div:last-child {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  /* Cards de Partidas no Lobby */
+  .match-card {
+    padding: 1rem;
+  }
+
+  .match-header {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .match-sport-league {
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    font-size: 0.75rem;
+  }
+
+  .match-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .teams-container {
+    width: 100%;
+  }
+
+  .odds-group {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    width: 100%;
+    gap: 0.4rem;
+  }
+
+  .odd-btn {
+    min-width: 0;
+    width: 100%;
+    padding: 0.55rem 0.4rem;
+  }
+
+  /* Tela 2: Detalhes da Partida e Arena */
+  .match-tabs-bar {
+    gap: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .match-tab-btn {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.8rem;
+  }
+
+  .match-arena {
+    padding: 1.25rem 1rem;
+  }
+
+  .arena-header {
+    flex-wrap: wrap;
+    gap: 0.6rem;
+  }
+
+  .arena-scoreboard {
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .arena-team-badge {
+    width: 44px;
+    height: 44px;
+    font-size: 1.35rem;
+  }
+
+  .arena-team-name {
+    font-size: 0.95rem;
+  }
+
+  .arena-score-numbers {
+    font-size: 2.2rem;
+    letter-spacing: 2px;
+  }
+
+  .arena-time-badge {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.55rem;
+  }
+
+  .market-odds-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* Tela 3: Carteira e Cash Out */
+  .wallet-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .wallet-tabs {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .wallet-tab-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .history-bet-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.9rem;
+    padding: 1rem;
+  }
+
+  .history-bet-financials {
+    align-items: stretch;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 0.75rem;
+  }
+
+  .cashout-btn {
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  /* Bet Slip Card na Barra Lateral */
+  .betslip-card, .ranking-card {
+    padding: 1rem;
+  }
+
+  .quick-stakes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* SMARTPHONES PEQUENOS (max-width: 480px) */
+@media (max-width: 480px) {
+  .navbar {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .logo-text {
+    font-size: 1.15rem;
+  }
+
+  .wallet-label {
+    display: none; /* Exibe apenas o ícone 💰 e o valor para caber com elegância */
+  }
+
+  .user-name,
+  #userName {
+    display: none; /* Mostra apenas o avatar do apostador no mobile */
+  }
+
+  .ws-status-text,
+  #wsStatusText {
+    display: none; /* Mantém apenas o ponto luminoso verde de conexão ativa */
+  }
+
+  .team-row {
+    font-size: 0.92rem;
+  }
+
+  .team-score {
+    font-size: 1rem;
+    min-width: 28px;
+    padding: 0.1rem 0.45rem;
+  }
+
+  .arena-score-numbers {
+    font-size: 1.85rem;
+  }
+
+  .odd-btn {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .odd-val {
+    font-size: 0.85rem;
+  }
+
+  .odd-label {
+    font-size: 0.72rem;
+  }
+
+  .goal-popup-card {
+    padding: 1.5rem 1.25rem;
+    margin: 1rem;
+  }
+
+  .goal-popup-title {
+    font-size: 1.4rem;
+  }
+}
+
 
