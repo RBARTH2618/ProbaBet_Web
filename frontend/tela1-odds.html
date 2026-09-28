@@ -43,9 +43,9 @@
   <!-- ========================================== -->
   <!-- ABAS DAS 3 TELAS PRINCIPAIS DO PROFESSOR -->
   <!-- ========================================== -->
-  <nav class="nav-tabs-bar">
+  <nav class="navigation-tabs nav-tabs-bar">
     <a href="tela1-odds.html" class="nav-tab active">
-      <span>⚽</span> Tela 1: Lobby de Odds ao Vivo
+      <span>🏟️</span> Tela 1: Lobby & Odds
       <span class="tab-badge">3 Jogos</span>
     </a>
     <a href="tela2-betslip.html" class="nav-tab">
@@ -224,12 +224,15 @@
 
     <!-- COLUNA LATERAL: CADERNETA DE APOSTAS (BET SLIP - TELA 2) -->
     <aside class="sidebar-column">
-      <div class="betslip-card">
+      <div class="betslip-card" id="betslipCard">
         <div class="betslip-header">
           <div class="betslip-title">
             <span>🎟️</span> Caderneta de Apostas
           </div>
-          <div class="betslip-count" id="betslipCount">0</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="betslip-count" id="betslipCount">0</div>
+            <button class="betslip-close-btn" onclick="clearBetSlip()" title="Cancelar seleção e fechar caderneta">✕ Fechar</button>
+          </div>
         </div>
 
         <!-- Estado Vazio -->
@@ -247,7 +250,7 @@
             </div>
             <div class="betslip-item-market">
               <span id="betslipSelection">-</span>
-              <span id="betslipOdd" style="color: var(--accent-gold); font-size: 1.1rem;">-</span>
+              <span id="betslipOdd" style="color: var(--accent-gold); font-size: 1.1rem; font-weight: 800;">-</span>
             </div>
           </div>
 
@@ -263,9 +266,14 @@
               <span class="potential-return-val" id="potentialReturn">R$ 0,00</span>
             </div>
 
-            <button class="btn-place-bet" id="btnPlaceBet" onclick="submitPlaceBet()">
-              Confirmar Aposta
-            </button>
+            <div class="betslip-action-buttons">
+              <button type="button" class="btn-cancel-bet" onclick="clearBetSlip()">
+                ✕ Cancelar
+              </button>
+              <button type="button" class="btn-place-bet" id="btnPlaceBet" onclick="submitPlaceBet()">
+                Confirmar Aposta
+              </button>
+            </div>
           </div>
         </div>
 
@@ -326,6 +334,12 @@
       document.getElementById('betslipSelection').textContent = `${market}: ${option}`;
       document.getElementById('betslipOdd').textContent = `@ ${odd.toFixed(2)}`;
 
+      // Ativa modo flutuante no mobile (Bottom Sheet)
+      const slipCard = document.getElementById('betslipCard');
+      const backdrop = document.getElementById('betslipBackdrop');
+      if (slipCard) slipCard.classList.add('mobile-open');
+      if (backdrop) backdrop.classList.add('active');
+
       window.calculateReturn();
     }
 
@@ -335,6 +349,12 @@
       document.getElementById('betslipEmpty').style.display = 'block';
       document.getElementById('betslipContent').style.display = 'none';
       document.getElementById('betslipCount').textContent = '0';
+
+      // Fecha modo flutuante no mobile
+      const slipCard = document.getElementById('betslipCard');
+      const backdrop = document.getElementById('betslipBackdrop');
+      if (slipCard) slipCard.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
     }
 
     window.calculateReturn = function() {
@@ -404,6 +424,9 @@
       logEvent('SIMULADOR', `Encerrada a partida #${matchId} para Liquidação Automática (RF-07).`, 'ev-green');
     }
   </script>
+
+  <!-- BACKDROP DA CADERNETA FLUTUANTE NO MOBILE -->
+  <div id="betslipBackdrop" class="betslip-backdrop" onclick="clearBetSlip()"></div>
 
   <!-- BANNER POP-UP DE GOL E SUSPENSÃO DE MERCADO (RF-06) -->
   <div id="goalPopupOverlay" class="goal-popup-overlay">

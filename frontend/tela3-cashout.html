@@ -42,9 +42,10 @@
   <!-- ========================================== -->
   <!-- ABAS DE NAVEGAÇÃO ENTRE AS 3 TELAS (ETAPA 15 e 16) -->
   <!-- ========================================== -->
-  <nav class="navigation-tabs">
+  <nav class="navigation-tabs nav-tabs-bar">
     <a href="tela1-odds.html" class="nav-tab">
       <span>🏟️</span> Tela 1: Lobby & Odds
+      <span class="tab-badge">3 Jogos</span>
     </a>
     <a href="tela2-betslip.html" class="nav-tab">
       <span>📋</span> Tela 2: Detalhes & Bet Slip
@@ -86,10 +87,10 @@
       <!-- ABAS DE NAVEGAÇÃO DA CARTEIRA -->
       <div class="wallet-tabs">
         <button class="wallet-tab-btn active" id="btnTabAbertas" onclick="switchWalletTab('abertas')">
-          <span>⚡</span> Apostas Abertas & Cash Out (<span id="tabCountAbertas">0</span>)
+          <span>⚡</span> Apostas Abertas (<span id="tabCountAbertas">0</span>)
         </button>
         <button class="wallet-tab-btn" id="btnTabEncerradas" onclick="switchWalletTab('encerradas')">
-          <span>📜</span> Histórico de Apostas Encerradas (<span id="tabCountEncerradas">0</span>)
+          <span>📜</span> Histórico (<span id="tabCountEncerradas">0</span>)
         </button>
       </div>
 
@@ -281,7 +282,7 @@
 
           <div class="history-bet-financials">
             <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.3rem;">Oferta de Cash Out:</div>
-            <button class="cashout-btn" id="cashoutBtn-${betId}" onclick="executeWalletCashOut(${betId}, ${cashoutVal}, this)" style="min-width: 170px;">
+            <button class="cashout-btn" id="cashoutBtn-${betId}" onclick="executeWalletCashOut(${betId}, ${cashoutVal}, this)">
               <span>Encerrar Aposta</span>
               <span class="cashout-offer-val" id="cashoutVal-${betId}">R$ ${Number(cashoutVal).toFixed(2)}</span>
             </button>

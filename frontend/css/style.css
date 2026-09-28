@@ -1644,6 +1644,39 @@ html, body {
    RESPONSIVIDADE E WEBMOBILE (TABLETS & SMARTPHONES)
    ============================================================ */
 
+/* Animações e Utilitários de Bottom Sheet Flutuante */
+@keyframes betslipSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.betslip-backdrop {
+  display: none;
+}
+
+.betslip-close-btn {
+  display: none;
+}
+
+.btn-cancel-bet {
+  display: none;
+}
+
+.betslip-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.betslip-action-buttons .btn-place-bet {
+  flex: 1;
+}
+
 /* TABLETS E TELAS MÉDIAS (max-width: 1024px) */
 @media (max-width: 1024px) {
   .main-container {
@@ -1663,64 +1696,80 @@ html, body {
 @media (max-width: 768px) {
   /* Navbar Mobile */
   .navbar {
-    padding: 0.65rem 1rem;
+    padding: 0.65rem 0.85rem;
     flex-wrap: wrap;
     gap: 0.5rem;
   }
 
-  .logo-text {
+  .logo-icon {
+    width: 32px;
+    height: 32px;
     font-size: 1.25rem;
   }
 
+  .logo-text {
+    font-size: 1.2rem;
+  }
+
   .header-status-area {
-    gap: 0.5rem;
+    gap: 0.4rem;
     flex-wrap: wrap;
   }
 
   .ws-status-badge {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.72rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.7rem;
   }
 
   .wallet-badge {
-    padding: 0.35rem 0.75rem;
-    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    gap: 0.35rem;
   }
 
   .wallet-amount {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
 
   .user-profile {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.78rem;
+    padding: 0.25rem 0.55rem;
+    font-size: 0.75rem;
   }
 
-  /* Abas de Navegação das Telas */
+  /* Abas de Navegação das Telas (Rolagem Horizontal com Toque) */
   .navigation-tabs,
   .nav-tabs-bar {
     padding: 0.35rem 0.75rem;
     gap: 0.35rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+  }
+
+  .navigation-tabs::-webkit-scrollbar,
+  .nav-tabs-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .nav-tab {
-    padding: 0.65rem 0.85rem;
-    font-size: 0.8rem;
+    padding: 0.55rem 0.85rem;
+    font-size: 0.78rem;
     flex-shrink: 0;
+    white-space: nowrap;
   }
 
   /* Container Principal */
   .main-container {
-    padding: 1rem 0.75rem;
-    gap: 1.25rem;
+    padding: 0.85rem 0.65rem;
+    gap: 1.15rem;
   }
 
   /* Banner de Status */
   .status-banner {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 1rem;
+    gap: 0.85rem;
+    padding: 0.85rem;
   }
 
   .status-banner > div:last-child {
@@ -1732,26 +1781,26 @@ html, body {
     gap: 0.5rem;
   }
 
-  /* Cards de Partidas no Lobby */
+  /* Cards de Partidas no Lobby (Tela 1) */
   .match-card {
-    padding: 1rem;
+    padding: 0.85rem;
   }
 
   .match-header {
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .match-sport-league {
     flex-wrap: wrap;
     gap: 0.35rem;
-    font-size: 0.75rem;
+    font-size: 0.74rem;
   }
 
   .match-body {
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: 0.85rem;
   }
 
   .teams-container {
@@ -1768,32 +1817,180 @@ html, body {
   .odd-btn {
     min-width: 0;
     width: 100%;
-    padding: 0.55rem 0.4rem;
+    padding: 0.55rem 0.35rem;
+    text-align: center;
   }
 
-  /* Tela 2: Detalhes da Partida e Arena */
+  .odd-val {
+    font-size: 0.95rem;
+  }
+
+  .odd-label {
+    font-size: 0.68rem;
+  }
+
+  /* ============================================================
+     CADERNETA FLUTUANTE NO MOBILE (BOTTOM SHEET DRAWER)
+     Ativada ao tocar em qualquer odd (CASA, EMPATE, FORA)
+     ============================================================ */
+  .betslip-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    z-index: 9998;
+    display: none;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+
+  .betslip-backdrop.active {
+    display: block;
+    opacity: 1;
+  }
+
+  /* No mobile, esconde a caderneta estática até o usuário clicar em uma odd */
+  .betslip-card:not(.mobile-open) {
+    display: none !important;
+  }
+
+  /* Caderneta flutuante sobreposta tipo gaveta inferior */
+  .betslip-card.mobile-open {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    top: auto !important;
+    z-index: 9999 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    max-height: 85vh !important;
+    background: #182030 !important;
+    border: none !important;
+    border-top: 2px solid var(--accent-green) !important;
+    border-radius: 20px 20px 0 0 !important;
+    box-shadow: 0 -15px 45px rgba(0, 0, 0, 0.95) !important;
+    overflow-y: auto !important;
+    animation: betslipSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+    padding: 1.15rem 1.15rem 2rem 1.15rem !important;
+    margin: 0 !important;
+  }
+
+  .betslip-close-btn {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    padding: 0.3rem 0.65rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .betslip-action-buttons {
+    display: flex;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+  }
+
+  .btn-cancel-bet {
+    display: block;
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    padding: 0.8rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .btn-cancel-bet:hover {
+    background: rgba(239, 68, 68, 0.2);
+    border-color: #ef4444;
+    color: #ef4444;
+  }
+
+  .betslip-action-buttons .btn-place-bet {
+    flex: 2;
+  }
+
+  /* ============================================================
+     TELA 2: RESPONSIVIDADE COMPLETA (DETALHES, ARENA, MERCADOS)
+     ============================================================ */
   .match-tabs-bar {
-    gap: 0.5rem;
-    padding-bottom: 0.5rem;
+    gap: 0.4rem;
+    padding-bottom: 0.4rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    flex-wrap: nowrap;
+    margin-bottom: 1rem;
+  }
+
+  .match-tabs-bar::-webkit-scrollbar {
+    display: none;
   }
 
   .match-tab-btn {
-    padding: 0.55rem 0.9rem;
-    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.78rem;
+    flex-shrink: 0;
+    white-space: nowrap;
+    gap: 0.4rem;
   }
 
   .match-arena {
-    padding: 1.25rem 1rem;
+    padding: 1rem 0.75rem;
+    border-radius: var(--radius-md);
+    margin-bottom: 1.15rem;
   }
 
   .arena-header {
-    flex-wrap: wrap;
-    gap: 0.6rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin-bottom: 1.1rem;
+    text-align: center;
+  }
+
+  .arena-header #arenaLeague {
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+
+  .arena-header > div:last-child {
+    display: flex;
+    gap: 0.5rem;
+    width: 100%;
+  }
+
+  .arena-header .btn-goal-trigger {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 0.5rem 0.35rem;
+    font-size: 0.75rem;
   }
 
   .arena-scoreboard {
-    gap: 0.5rem;
-    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+    margin-bottom: 1.15rem;
+    width: 100%;
+  }
+
+  .arena-team {
+    flex: 1;
+    max-width: 95px;
+    gap: 0.35rem;
   }
 
   .arena-team-badge {
@@ -1803,75 +2000,220 @@ html, body {
   }
 
   .arena-team-name {
-    font-size: 0.95rem;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.2;
+    word-break: break-word;
+    text-align: center;
+  }
+
+  .arena-score-box {
+    padding: 0 0.25rem;
+    flex-shrink: 0;
   }
 
   .arena-score-numbers {
-    font-size: 2.2rem;
+    font-size: 2.1rem;
     letter-spacing: 2px;
   }
 
   .arena-time-badge {
-    font-size: 0.72rem;
-    padding: 0.2rem 0.55rem;
+    font-size: 0.68rem;
+    padding: 0.2rem 0.5rem;
+    margin-top: 0.25rem;
   }
 
+  .match-stats-panel {
+    padding: 0.85rem;
+    margin-top: 0.75rem;
+  }
+
+  .stats-title {
+    font-size: 0.76rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-labels {
+    font-size: 0.75rem;
+  }
+
+  .stat-row {
+    margin-bottom: 0.65rem;
+  }
+
+  .markets-container {
+    gap: 1rem;
+  }
+
+  .market-box {
+    padding: 0.95rem;
+  }
+
+  .market-header {
+    margin-bottom: 0.75rem;
+  }
+
+  .market-name {
+    font-size: 0.88rem;
+  }
+
+  /* Mercado 1X2 com 3 colunas compactas no mobile */
   .market-odds-grid {
-    grid-template-columns: 1fr;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.4rem !important;
   }
 
-  /* Tela 3: Carteira e Cash Out */
-  .wallet-kpi-grid {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
+  /* Mercados com 2 opções (Over/Under e BTTS) usam 2 colunas */
+  .market-box:nth-child(2) .market-odds-grid,
+  .market-box:nth-child(3) .market-odds-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  .wallet-tabs {
-    flex-direction: column;
-    gap: 0.35rem;
-  }
-
-  .wallet-tab-btn {
+  .market-odds-grid .odd-btn {
+    padding: 0.55rem 0.35rem;
+    min-width: 0;
     width: 100%;
-    justify-content: center;
+    text-align: center;
   }
 
-  .history-bet-card {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.9rem;
-    padding: 1rem;
+  .market-odds-grid .odd-label {
+    font-size: 0.7rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
   }
 
-  .history-bet-financials {
-    align-items: stretch;
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-    padding-top: 0.75rem;
-  }
-
-  .cashout-btn {
-    width: 100%;
-    min-width: 0 !important;
-  }
-
-  /* Bet Slip Card na Barra Lateral */
-  .betslip-card, .ranking-card {
-    padding: 1rem;
+  .market-odds-grid .odd-val {
+    font-size: 0.95rem;
   }
 
   .quick-stakes {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .btn-quick-stake {
+    padding: 0.35rem 0.2rem;
+    font-size: 0.72rem;
+  }
+
+  /* ============================================================
+     TELA 3: RESPONSIVIDADE COMPLETA (CARTEIRA, KPIS, CASHOUT)
+     ============================================================ */
+  .wallet-kpi-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.65rem;
+    margin-bottom: 1.15rem;
+  }
+
+  .kpi-card {
+    padding: 0.85rem 1rem;
+    gap: 0.2rem;
+  }
+
+  .kpi-label {
+    font-size: 0.72rem;
+  }
+
+  .kpi-value {
+    font-size: 1.4rem;
+  }
+
+  .kpi-subtext {
+    font-size: 0.72rem;
+  }
+
+  .wallet-tabs {
+    display: flex;
+    flex-direction: row;
+    gap: 0.4rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .wallet-tab-btn {
+    flex: 1;
+    padding: 0.55rem 0.4rem;
+    font-size: 0.76rem;
+    justify-content: center;
+    text-align: center;
+    border-radius: var(--radius-sm);
+  }
+
+  .history-bet-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.85rem !important;
+    padding: 0.95rem 1rem !important;
+  }
+
+  .history-bet-main {
+    gap: 0.35rem;
+    width: 100%;
+  }
+
+  .history-bet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .history-bet-match {
+    font-size: 0.95rem;
+  }
+
+  .history-bet-selection {
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .history-bet-financials {
+    width: 100% !important;
+    align-items: stretch !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding-top: 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .history-bet-financials > div:first-child {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+  }
+
+  .cashout-btn {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0.75rem 1rem !important;
+    font-size: 0.92rem !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+
+  .cashout-offer-val {
+    font-size: 1.1rem !important;
+  }
+
+  /* Cards laterais (Ranking e Atalhos) */
+  .ranking-card {
+    padding: 0.95rem;
   }
 }
 
 /* SMARTPHONES PEQUENOS (max-width: 480px) */
 @media (max-width: 480px) {
   .navbar {
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.65rem;
   }
 
   .logo-text {
-    font-size: 1.15rem;
+    font-size: 1.12rem;
   }
 
   .wallet-label {
@@ -1889,21 +2231,36 @@ html, body {
   }
 
   .team-row {
-    font-size: 0.92rem;
+    font-size: 0.9rem;
   }
 
   .team-score {
-    font-size: 1rem;
-    min-width: 28px;
-    padding: 0.1rem 0.45rem;
+    font-size: 0.95rem;
+    min-width: 26px;
+    padding: 0.1rem 0.35rem;
+  }
+
+  .arena-scoreboard {
+    gap: 0.2rem;
+  }
+
+  .arena-team-badge {
+    width: 38px;
+    height: 38px;
+    font-size: 1.15rem;
+  }
+
+  .arena-team-name {
+    font-size: 0.8rem;
   }
 
   .arena-score-numbers {
-    font-size: 1.85rem;
+    font-size: 1.75rem;
+    letter-spacing: 1px;
   }
 
   .odd-btn {
-    padding: 0.5rem 0.25rem;
+    padding: 0.5rem 0.2rem;
   }
 
   .odd-val {
@@ -1911,16 +2268,21 @@ html, body {
   }
 
   .odd-label {
-    font-size: 0.72rem;
+    font-size: 0.68rem;
   }
 
   .goal-popup-card {
-    padding: 1.5rem 1.25rem;
+    padding: 1.5rem 1.15rem;
     margin: 1rem;
   }
 
   .goal-popup-title {
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+  }
+
+  .wallet-tab-btn {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.3rem;
   }
 }
 

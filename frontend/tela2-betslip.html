@@ -42,9 +42,10 @@
   <!-- ========================================== -->
   <!-- ABAS DE NAVEGAÇÃO ENTRE AS 3 TELAS (ETAPA 15 e 16) -->
   <!-- ========================================== -->
-  <nav class="navigation-tabs">
+  <nav class="navigation-tabs nav-tabs-bar">
     <a href="tela1-odds.html" class="nav-tab">
       <span>🏟️</span> Tela 1: Lobby & Odds
+      <span class="tab-badge">3 Jogos</span>
     </a>
     <a href="tela2-betslip.html" class="nav-tab active">
       <span>📋</span> Tela 2: Detalhes & Bet Slip
@@ -238,12 +239,15 @@
     <!-- COLUNA LATERAL: CADERNETA AVANÇADA (BET SLIP) -->
     <aside class="sidebar-column">
       
-      <div class="betslip-card">
+      <div class="betslip-card" id="betslipCard">
         <div class="betslip-header">
           <div class="betslip-title">
             <span>🎟️</span> Caderneta de Apostas (Bet Slip)
           </div>
-          <div class="betslip-count" id="slipCount">0</div>
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <div class="betslip-count" id="slipCount">0</div>
+            <button class="betslip-close-btn" onclick="clearSlip()" title="Cancelar seleção e fechar caderneta">✕ Fechar</button>
+          </div>
         </div>
 
         <!-- Estado Vazio -->
@@ -298,10 +302,15 @@
               ❌ Saldo insuficiente para esta aposta!
             </div>
 
-            <!-- Botão de Confirmação (RF-03) -->
-            <button class="btn-place-bet" id="btnConfirmBet" onclick="submitSlipBet()">
-              Confirmar Aposta (PLACE_BET)
-            </button>
+            <!-- Botões de Ação (Confirmar / Cancelar) -->
+            <div class="betslip-action-buttons">
+              <button type="button" class="btn-cancel-bet" onclick="clearSlip()">
+                ✕ Cancelar
+              </button>
+              <button class="btn-place-bet" id="btnConfirmBet" onclick="submitSlipBet()">
+                Confirmar Aposta
+              </button>
+            </div>
           </div>
 
         </div>
@@ -359,8 +368,8 @@
           Ver Carteira
         </a>
       </div>
-    </div>
-  </div>
+    <!-- BACKDROP DA CADERNETA FLUTUANTE NO MOBILE -->
+  <div id="betslipBackdrop" class="betslip-backdrop" onclick="clearSlip()"></div>
 
   <!-- SCRIPTS -->
   <script src="js/websocket.js"></script>
@@ -474,6 +483,12 @@
       document.getElementById('slipMarketAndOption').textContent = `${market}: ${option}`;
       document.getElementById('slipOddVal').textContent = `@ ${oddVal.toFixed(2)}`;
 
+      // Ativa modo flutuante no mobile
+      const slipCard = document.getElementById('betslipCard');
+      const backdrop = document.getElementById('betslipBackdrop');
+      if (slipCard) slipCard.classList.add('mobile-open');
+      if (backdrop) backdrop.classList.add('active');
+
       calculateSlipReturn();
     }
 
@@ -484,6 +499,12 @@
       document.getElementById('slipActive').style.display = 'none';
       document.getElementById('slipCount').textContent = '0';
       document.getElementById('oddChangeAlert').style.display = 'none';
+
+      // Fecha modo flutuante no mobile
+      const slipCard = document.getElementById('betslipCard');
+      const backdrop = document.getElementById('betslipBackdrop');
+      if (slipCard) slipCard.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
     }
 
     function setStake(amount) {
