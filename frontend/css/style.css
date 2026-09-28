@@ -71,17 +71,23 @@ body {
 }
 
 .logo-icon {
-  width: 36px;
-  height: 36px;
-  background: linear-gradient(135deg, var(--accent-green), #00b0ff);
+  width: 38px;
+  height: 38px;
+  background: linear-gradient(135deg, rgba(0, 230, 118, 0.22), rgba(0, 176, 255, 0.12));
+  border: 1px solid rgba(0, 230, 118, 0.4);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 900;
-  font-size: 1.25rem;
-  color: #000;
+  font-size: 1.45rem;
+  line-height: 1;
   box-shadow: 0 0 15px var(--accent-green-glow);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.logo-area:hover .logo-icon {
+  transform: scale(1.1) rotate(8deg);
+  box-shadow: 0 0 25px var(--accent-green-glow);
 }
 
 .logo-text {
