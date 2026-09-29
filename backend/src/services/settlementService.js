@@ -4,6 +4,7 @@ const BilheteAposta = require('../models/BilheteAposta');
 const betService = require('./betService');
 const apostadorService = require('./apostadorService');
 const matchSimulatorService = require('./matchSimulatorService');
+const settlementHistoryService = require('./settlementHistoryService');
 
 /**
  * MOTOR DE LIQUIDAÇÃO AUTOMÁTICA DE APOSTAS (RF-07)
@@ -101,18 +102,46 @@ class SettlementService extends EventEmitter {
           novoSaldo = await apostadorService.creditarSaldo(apostadorId, retornoPotencial);
         }
 
+        let histRecord = null;
+        try {
+          histRecord = await settlementHistoryService.recordSettlement({
+            idAposta: betId,
+            idApostador: apostadorId,
+            idPartida: matchId,
+            partidaNome: `${match.time_casa} x ${match.time_fora}`,
+            mercado,
+            selecao,
+            oddMomento,
+            valorApostado,
+            statusFinal: 'GREEN',
+            valorRetorno: retornoPotencial,
+            lucroPrejuizo: retornoPotencial - valorApostado,
+            placarFinal: `${match.placar_casa} x ${match.placar_fora}`,
+            motivo: 'TERMINO_PARTIDA'
+          });
+        } catch (hErr) {
+          console.warn('[Liquidação] Erro ao gravar no histórico de liquidações:', hErr.message);
+        }
+
         console.log(`[Liquidação] 🟢 Bilhete #${betId} GREEN! Apostador: ${apostadorId}, Retorno: R$ ${retornoPotencial.toFixed(2)}, Novo Saldo: R$ ${novoSaldo.toFixed(2)}`);
 
         // Notifica o apostador via WebSocket
         if (typeof sendToApostador === 'function') {
           sendToApostador(apostadorId, 'BET_SETTLED', {
             betId,
+            idAposta: betId,
             status: 'GREEN',
             valorApostado,
             oddMomento,
             retorno: retornoPotencial,
+            valorGanho: retornoPotencial,
             novoSaldo,
             partida: `${match.time_casa} ${match.placar_casa} x ${match.placar_fora} ${match.time_fora}`,
+            partidaNome: `${match.time_casa} x ${match.time_fora}`,
+            placarFinal: `${match.placar_casa} x ${match.placar_fora}`,
+            selecao,
+            mercado,
+            historyRecord: histRecord,
             timestamp: new Date().toISOString()
           });
 
@@ -121,6 +150,11 @@ class SettlementService extends EventEmitter {
             saldo: novoSaldo,
             motivo: 'APOSTA_VENCEDORA_GREEN'
           });
+
+          // Envia histórico consolidado para atualização instantânea da interface
+          settlementHistoryService.getHistoryByApostador(apostadorId).then(history => {
+            sendToApostador(apostadorId, 'BET_HISTORY_LIST', { history });
+          }).catch(() => {});
         }
       } else {
         countRed++;
@@ -133,19 +167,52 @@ class SettlementService extends EventEmitter {
         }
         await betService.updateBetStatus(betId, 'RED');
 
+        let histRecord = null;
+        try {
+          histRecord = await settlementHistoryService.recordSettlement({
+            idAposta: betId,
+            idApostador: apostadorId,
+            idPartida: matchId,
+            partidaNome: `${match.time_casa} x ${match.time_fora}`,
+            mercado,
+            selecao,
+            oddMomento,
+            valorApostado,
+            statusFinal: 'RED',
+            valorRetorno: 0,
+            lucroPrejuizo: -valorApostado,
+            placarFinal: `${match.placar_casa} x ${match.placar_fora}`,
+            motivo: 'TERMINO_PARTIDA'
+          });
+        } catch (hErr) {
+          console.warn('[Liquidação] Erro ao gravar no histórico de liquidações:', hErr.message);
+        }
+
         console.log(`[Liquidação] 🔴 Bilhete #${betId} RED. Apostador: ${apostadorId} (Seleção: ${selecao}, Resultado: ${winning1X2})`);
 
         // Notifica o apostador via WebSocket
         if (typeof sendToApostador === 'function') {
           sendToApostador(apostadorId, 'BET_SETTLED', {
             betId,
+            idAposta: betId,
             status: 'RED',
             valorApostado,
             oddMomento,
             retorno: 0,
+            valorGanho: 0,
             partida: `${match.time_casa} ${match.placar_casa} x ${match.placar_fora} ${match.time_fora}`,
+            partidaNome: `${match.time_casa} x ${match.time_fora}`,
+            placarFinal: `${match.placar_casa} x ${match.placar_fora}`,
+            selecao,
+            mercado,
+            historyRecord: histRecord,
             timestamp: new Date().toISOString()
           });
+
+          // Envia histórico consolidado para atualização instantânea da interface
+          settlementHistoryService.getHistoryByApostador(apostadorId).then(history => {
+            sendToApostador(apostadorId, 'BET_HISTORY_LIST', { history });
+          }).catch(() => {});
         }
       }
     }

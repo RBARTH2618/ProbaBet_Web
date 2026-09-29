@@ -207,6 +207,14 @@ registerHandler('CASH_OUT', async (ws, payload, clientInfo) => {
       saldo: result.novoSaldo,
       motivo: 'CASHOUT_REALIZADO'
     });
+
+    // Emite atualização imediata do histórico de liquidações consolidado
+    const settlementHistoryService = require('../services/settlementHistoryService');
+    const updatedHistory = await settlementHistoryService.getHistoryByApostador(apostadorId);
+    sendToClient(ws, 'BET_HISTORY_LIST', {
+      apostadorId,
+      history: updatedHistory
+    });
   } catch (err) {
     console.warn(`[WebSocket] Cash Out rejeitado para cliente [${clientInfo.id}]: ${err.message}`);
     sendToClient(ws, 'CASH_OUT_REJECTED', {
@@ -235,6 +243,31 @@ registerHandler('GET_CASHOUT_OFFERS', async (ws, payload, clientInfo) => {
   });
 
   sendToClient(ws, 'CASHOUT_OFFERS_LIST', { offers });
+});
+
+// Tratador para consulta do histórico consolidado de liquidações do apostador (RF-07)
+registerHandler('GET_BET_HISTORY', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const settlementHistoryService = require('../services/settlementHistoryService');
+  const apostadorId = clientInfo.apostador?.id_apostador || ws.apostadorId || 1;
+  const history = await settlementHistoryService.getHistoryByApostador(apostadorId);
+
+  sendToClient(ws, 'BET_HISTORY_LIST', {
+    apostadorId,
+    history
+  });
+});
+
+registerHandler('GET_SETTLED_BETS', async (ws, payload, clientInfo) => {
+  const { sendToClient } = require('./index');
+  const settlementHistoryService = require('../services/settlementHistoryService');
+  const apostadorId = clientInfo.apostador?.id_apostador || ws.apostadorId || 1;
+  const history = await settlementHistoryService.getHistoryByApostador(apostadorId);
+
+  sendToClient(ws, 'BET_HISTORY_LIST', {
+    apostadorId,
+    history
+  });
 });
 
 /**

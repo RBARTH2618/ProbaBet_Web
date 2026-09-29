@@ -116,8 +116,13 @@ function handleServerEvent(payload) {
       if (Array.isArray(payload.matches)) {
         payload.matches.forEach(m => updateMatchUI(m));
       }
-      // Solicita a lista de apostas ativas da sessão
+      // Solicita a lista de apostas ativas da sessão e o histórico consolidado
       window.sendWs('GET_ACTIVE_BETS');
+      window.sendWs('GET_BET_HISTORY');
+
+      if (Array.isArray(payload.history) && typeof window.onBetHistoryList === 'function') {
+        window.onBetHistoryList(payload.history);
+      }
       break;
 
     case 'BALANCE_UPDATE':
@@ -235,6 +240,15 @@ function handleServerEvent(payload) {
 
     case 'SETTLEMENT_COMPLETED':
       logEvent('LIQUIDAÇÃO', `🏁 Partida #${payload.matchId} (${payload.placarFinal}) encerrada. GREEN: ${payload.countGreen} | RED: ${payload.countRed}. Total pago: R$ ${Number(payload.totalPago).toFixed(2)}`, 'ev-green');
+      break;
+
+    case 'BET_HISTORY_LIST':
+      if (Array.isArray(payload.history)) {
+        logEvent('HISTÓRICO', `📜 Histórico de liquidações atualizado: ${payload.history.length} bilhete(s).`, 'ev-blue');
+        if (typeof window.onBetHistoryList === 'function') {
+          window.onBetHistoryList(payload.history);
+        }
+      }
       break;
 
     case 'RANKING_UPDATE':

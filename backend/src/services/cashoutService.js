@@ -217,12 +217,46 @@ class CashoutService extends EventEmitter {
       // Remove da lista de ofertas ativas
       activeOffers.delete(idAposta);
 
+      // Registra no Módulo de Histórico de Liquidações
+      const settlementHistoryService = require('./settlementHistoryService');
+      const valorApostado = parseFloat(bet.valorApostado || bet.valor_apostado || 0);
+      const oddMomento = parseFloat(bet.oddMomento || bet.odd_momento || 2.0);
+      const matchNome = match ? `${match.time_casa} x ${match.time_fora}` : (bet.partidaNome || `Partida #${matchId}`);
+      const placarMomento = match ? `${match.placar_casa} x ${match.placar_fora}` : null;
+
+      let histRecord = null;
+      try {
+        histRecord = await settlementHistoryService.recordSettlement({
+          idAposta,
+          idApostador,
+          idPartida: matchId,
+          partidaNome: matchNome,
+          mercado: bet.mercado || bet.nome_mercado || '1X2',
+          selecao: bet.selecao || bet.opcao_selecao || 'CASA',
+          oddMomento,
+          valorApostado,
+          statusFinal: 'CASH_OUT',
+          valorRetorno: valorResgate,
+          lucroPrejuizo: valorResgate - valorApostado,
+          placarFinal: placarMomento,
+          motivo: 'CASH_OUT'
+        });
+      } catch (hErr) {
+        console.warn('[Cash Out] Erro ao gravar no histórico de liquidações:', hErr.message);
+      }
+
       console.log(`[Cash Out] 💰 Cash Out confirmado para o bilhete #${idAposta}! Resgate: R$ ${valorResgate.toFixed(2)}. Novo saldo: R$ ${novoSaldo.toFixed(2)}`);
 
       const result = {
         betId: idAposta,
+        idAposta,
+        partidaNome: matchNome,
+        selecao: bet.selecao || bet.opcao_selecao,
+        valorApostado,
         valorResgatado: valorResgate,
+        valorGanho: valorResgate,
         novoSaldo,
+        historyRecord: histRecord,
         timestamp: new Date().toISOString()
       };
 

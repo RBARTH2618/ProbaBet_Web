@@ -318,15 +318,29 @@
       closedBetsHistory.forEach(b => {
         const betId = b.idAposta || b.id_aposta;
         const partidaNome = b.partidaNome || b.partida_nome || `Partida #${b.id_partida || b.matchId}`;
-        const selecao = b.selecao || b.opcao_selecionada;
-        const valorApostado = b.valorApostado || b.valor_apostado || 20.00;
-        const status = b.status || b.status_aposta;
-        const retorno = b.valorGanho !== undefined ? b.valorGanho : (status === 'RED' ? 0 : valorApostado);
-        const lucro = retorno - valorApostado;
+        const selecao = b.selecao || b.opcao_selecionada || 'CASA';
+        const oddMomento = b.oddMomento || b.odd_momento;
+        const mercado = b.mercado || b.nome_mercado || '1X2';
+        const valorApostado = parseFloat(b.valorApostado !== undefined ? b.valorApostado : (b.valor_apostado || 0));
+        const status = b.statusFinal || b.status_final || b.status || b.status_aposta || 'RED';
+        const retorno = parseFloat(b.valorRetorno !== undefined ? b.valorRetorno : (b.valorGanho !== undefined ? b.valorGanho : (status === 'RED' ? 0 : valorApostado)));
+        const lucro = b.lucroPrejuizo !== undefined ? parseFloat(b.lucroPrejuizo) : (retorno - valorApostado);
+        const placar = b.placarFinal || b.placar_final || null;
+        const motivo = b.motivoLiquidacao || b.motivo_liquidacao || (status === 'CASH_OUT' ? 'CASH_OUT' : 'TERMINO_PARTIDA');
+        const dataLiquidacao = b.dataLiquidacao || b.data_liquidacao || b.dataHora || null;
+
+        let formattedDate = '';
+        if (dataLiquidacao) {
+          try {
+            const d = new Date(dataLiquidacao);
+            formattedDate = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }) + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+          } catch(e) {}
+        }
 
         let badgeClass = 'badge-active';
         let statusText = status;
         let profitClass = 'profit-gold';
+        let motivoLabel = 'Término do Jogo';
 
         if (status === 'GREEN') {
           badgeClass = 'badge-green';
@@ -339,6 +353,7 @@
         } else if (status === 'CASH_OUT') {
           badgeClass = 'badge-cashout';
           statusText = '⚡ CASHOUT ANTECIPADO';
+          motivoLabel = 'Resgate Antecipado';
           profitClass = lucro >= 0 ? 'profit-green' : 'profit-gold';
         }
 
@@ -349,18 +364,26 @@
             <div class="history-bet-header">
               <span class="history-bet-id">BILHETE #${betId}</span>
               <span class="history-badge ${badgeClass}">${statusText}</span>
+              ${motivo === 'CASH_OUT' ? '<span style="font-size:0.7rem; color:var(--accent-gold); font-weight:700;">[CASH OUT]</span>' : ''}
             </div>
             <div class="history-bet-match">${partidaNome}</div>
             <div class="history-bet-selection">
-              Seleção: <strong style="color: #fff;">${selecao}</strong> • Apostado: R$ ${Number(valorApostado).toFixed(2)}
+              <span>Mercado: <strong style="color: #fff;">${mercado}</strong></span> • 
+              <span>Seleção: <strong style="color: var(--accent-gold);">${selecao}</strong></span>
+              ${oddMomento ? ` • <span>@ <strong>${Number(oddMomento).toFixed(2)}</strong></span>` : ''}
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; font-size: 0.78rem; color: var(--text-dim); margin-top: 0.3rem;">
+              <span>Apostado: <strong style="color: #fff;">R$ ${Number(valorApostado).toFixed(2)}</strong></span>
+              ${placar ? `<span>Placar Final: <strong style="color: var(--accent-green);">${placar}</strong></span>` : ''}
+              ${formattedDate ? `<span>🕒 ${formattedDate}</span>` : ''}
             </div>
           </div>
 
           <div class="history-bet-financials">
-            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.15rem;">Retorno Creditado:</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.15rem;">Retorno Pago:</div>
             <div class="history-bet-profit ${profitClass}">R$ ${Number(retorno).toFixed(2)}</div>
-            <div style="font-size: 0.75rem; color: var(--text-dim);">
-              ${lucro >= 0 ? `Lucro: +R$ ${lucro.toFixed(2)}` : `Prejuízo: -R$ ${Math.abs(lucro).toFixed(2)}`}
+            <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 0.15rem;">
+              ${lucro >= 0 ? `Lucro: <strong style="color: var(--accent-green);">+R$ ${lucro.toFixed(2)}</strong>` : `Prejuízo: <strong style="color: #ef4444;">-R$ ${Math.abs(lucro).toFixed(2)}</strong>`}
             </div>
           </div>
         `;
@@ -399,32 +422,52 @@
       updateFinancialKPIs();
     });
 
+    // Função de sincronização com o histórico consolidado vindo do WebSocket
+    window.onBetHistoryList = function(history) {
+      if (Array.isArray(history)) {
+        closedBetsHistory.length = 0;
+        history.forEach(item => closedBetsHistory.push(item));
+        renderWalletSettledBets();
+        updateFinancialKPIs();
+      }
+    };
+
+    window.addEventListener('probabet:BET_HISTORY_LIST', (e) => {
+      const history = e.detail?.history;
+      if (Array.isArray(history)) {
+        closedBetsHistory.length = 0;
+        history.forEach(item => closedBetsHistory.push(item));
+        renderWalletSettledBets();
+        updateFinancialKPIs();
+      }
+    });
+
     window.addEventListener('probabet:CASH_OUT_CONFIRMED', (e) => {
       const payload = e.detail;
       const b = activeBetsMap.get(payload.betId);
       if (b) {
-        b.status = 'CASH_OUT';
-        b.valorGanho = payload.valorCreditado;
-        closedBetsHistory.unshift(b);
         activeBetsMap.delete(payload.betId);
         renderWalletActiveBets();
-        renderWalletSettledBets();
-        updateFinancialKPIs();
       }
+      // Solicita atualização imediata do histórico consolidado persistido
+      if (typeof window.sendWs === 'function') {
+        window.sendWs('GET_BET_HISTORY');
+      }
+      updateFinancialKPIs();
     });
 
     window.addEventListener('probabet:BET_SETTLED', (e) => {
       const payload = e.detail;
       const b = activeBetsMap.get(payload.betId);
       if (b) {
-        b.status = payload.status;
-        b.valorGanho = payload.retorno || 0;
-        closedBetsHistory.unshift(b);
         activeBetsMap.delete(payload.betId);
         renderWalletActiveBets();
-        renderWalletSettledBets();
-        updateFinancialKPIs();
       }
+      // Solicita atualização imediata do histórico consolidado persistido
+      if (typeof window.sendWs === 'function') {
+        window.sendWs('GET_BET_HISTORY');
+      }
+      updateFinancialKPIs();
     });
 
     window.addEventListener('probabet:BALANCE_UPDATE', (e) => {
@@ -433,6 +476,11 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       updateFinancialKPIs();
+      setTimeout(() => {
+        if (typeof window.sendWs === 'function') {
+          window.sendWs('GET_BET_HISTORY');
+        }
+      }, 500);
     });
   </script>
 </body>

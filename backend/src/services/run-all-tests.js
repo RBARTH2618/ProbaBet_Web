@@ -14,6 +14,7 @@ const testSuites = [
   { name: 'Cálculo de Cash Out & Prevenção de Race Condition (RF-04, RF-05, RNF-01)', script: 'test-cashout.js' },
   { name: 'Notificação de Gol & Congelamento de Mercado (RF-06, RNF-01)', script: 'test-goal-suspension.js' },
   { name: 'Liquidação Automática 1X2 GREEN/RED (RF-07)', script: 'test-settlement.js' },
+  { name: 'Módulo de Histórico de Liquidações & Persistência (RF-07)', script: 'test-settlement-history.js' },
   { name: 'Ranking da Sessão em Tempo Real (RF-08)', script: 'test-ranking.js' },
   { name: 'Integração Ponta a Ponta das 3 Telas & Latência < 100ms (RNF-03)', script: 'test-e2e-screens.js' }
 ];

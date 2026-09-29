@@ -142,6 +142,9 @@ function initWebSocketServer(httpServer) {
 
     // [RF-01] Atribuição de Saldo Fictício Inicial e confirmação da carteira no handshake
     const matchSimulatorService = require('../services/matchSimulatorService');
+    const settlementHistoryService = require('../services/settlementHistoryService');
+    const initialHistory = await settlementHistoryService.getHistoryByApostador(apostador.id_apostador);
+
     sendToClient(ws, 'CONNECTION_ESTABLISHED', {
       clientId,
       message: 'Conexão WebSocket com ProbaBet estabelecida com sucesso!',
@@ -152,7 +155,8 @@ function initWebSocketServer(httpServer) {
         saldo: apostador.saldo_ficticio
       },
       saldo: apostador.saldo_ficticio,
-      matches: matchSimulatorService.getAllMatches()
+      matches: matchSimulatorService.getAllMatches(),
+      history: initialHistory
     });
 
     // [RF-01] Transmitir evento inicial de confirmação de saldo da carteira
@@ -160,6 +164,12 @@ function initWebSocketServer(httpServer) {
       apostadorId: apostador.id_apostador,
       saldo: apostador.saldo_ficticio,
       motivo: 'SALDO_INICIAL'
+    });
+
+    // [RF-07] Transmitir histórico consolidado de liquidações da carteira
+    sendToClient(ws, 'BET_HISTORY_LIST', {
+      apostadorId: apostador.id_apostador,
+      history: initialHistory
     });
 
     // [RF-08] Transmitir ranking da sessão em tempo real

@@ -7,7 +7,7 @@
 const assert = require('assert');
 const { WebSocket } = require('ws');
 
-const WS_URL = 'ws://localhost:3000?apostadorId=1';
+const WS_URL = `ws://localhost:3000?apostadorId=${Math.floor(Math.random() * 8000) + 1000}&nome=Arthur_E2E`;
 
 async function runE2ETest() {
   console.log('====================================================');
