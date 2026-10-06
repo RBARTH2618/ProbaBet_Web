@@ -22,6 +22,9 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(frontendPath, 'tela1-odds.html'));
 });
 
+// Evitar erro 404 de favicon no navegador
+app.get('/favicon.ico', (req, res) => res.status(204).end());
+
 const matchSimulatorService = require('./services/matchSimulatorService');
 
 // Rota de verificação de integridade (Healthcheck)

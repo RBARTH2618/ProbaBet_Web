@@ -4,8 +4,20 @@
  * Executa: node src/services/run-all-tests.js
  */
 
-const { execSync } = require('child_process');
+const { execSync, spawn } = require('child_process');
 const path = require('path');
+const http = require('http');
+
+function checkServer() {
+  return new Promise((resolve) => {
+    const req = http.get('http://localhost:3000/api/health', () => resolve(true));
+    req.on('error', () => resolve(false));
+    req.setTimeout(600, () => {
+      req.destroy();
+      resolve(false);
+    });
+  });
+}
 
 const testSuites = [
   { name: 'Simulador de Partidas (RF-02)', script: 'test-simulator.js' },
@@ -19,37 +31,54 @@ const testSuites = [
   { name: 'Integração Ponta a Ponta das 3 Telas & Latência < 100ms (RNF-03)', script: 'test-e2e-screens.js' }
 ];
 
-console.log('================================================================');
-console.log('   PROBABET — EXECUÇÃO CONSOLIDADA DA SUÍTE DE TESTES (ETAPA 17)');
-console.log('   Integrantes: Arthur Borges Rodrigues & João Lucas Tavares Silva');
-console.log('================================================================\n');
+async function main() {
+  console.log('================================================================');
+  console.log('   PROBABET — EXECUÇÃO CONSOLIDADA DA SUÍTE DE TESTES (ETAPA 17)');
+  console.log('   Integrantes: Arthur Borges Rodrigues & João Lucas Tavares Silva');
+  console.log('================================================================\n');
 
-let passedCount = 0;
-const startTime = Date.now();
+  let serverProcess = null;
+  const alreadyRunning = await checkServer();
+  if (!alreadyRunning) {
+    console.log('⚡ Inicializando servidor ProbaBet em segundo plano para os testes E2E...');
+    const serverPath = path.join(__dirname, '../server.js');
+    serverProcess = spawn('node', [serverPath], { stdio: 'ignore', detached: false });
+    await new Promise(r => setTimeout(r, 2000));
+  }
 
-for (const suite of testSuites) {
-  process.stdout.write(`⏳ Executando: ${suite.name}... `);
-  try {
-    const scriptPath = path.join(__dirname, suite.script);
-    execSync(`node "${scriptPath}"`, { stdio: 'pipe' });
-    console.log('✅ APROVADO');
-    passedCount++;
-  } catch (err) {
-    console.log('❌ FALHOU');
-    console.error(`Erro em ${suite.script}:`, err.stdout?.toString() || err.message);
+  let passedCount = 0;
+  const startTime = Date.now();
+
+  for (const suite of testSuites) {
+    process.stdout.write(`⏳ Executando: ${suite.name}... `);
+    try {
+      const scriptPath = path.join(__dirname, suite.script);
+      execSync(`node "${scriptPath}"`, { stdio: 'pipe' });
+      console.log('✅ APROVADO');
+      passedCount++;
+    } catch (err) {
+      console.log('❌ FALHOU');
+      console.error(`Erro em ${suite.script}:`, err.stdout?.toString() || err.message);
+    }
+  }
+
+  if (serverProcess) {
+    serverProcess.kill();
+  }
+
+  const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
+
+  console.log('\n================================================================');
+  console.log(`   RESULTADO FINAL: ${passedCount} / ${testSuites.length} SUÍTES DE TESTES APROVADAS!`);
+  console.log(`   Tempo Total de Execução: ${totalDuration}s`);
+  console.log('   Status: 100% DOS REQUISITOS (RF-01 a RF-08, RNF-01 a RNF-03) VALIDADOS');
+  console.log('================================================================\n');
+
+  if (passedCount === testSuites.length) {
+    process.exit(0);
+  } else {
+    process.exit(1);
   }
 }
 
-const totalDuration = ((Date.now() - startTime) / 1000).toFixed(2);
-
-console.log('\n================================================================');
-console.log(`   RESULTADO FINAL: ${passedCount} / ${testSuites.length} SUÍTES DE TESTES APROVADAS!`);
-console.log(`   Tempo Total de Execução: ${totalDuration}s`);
-console.log('   Status: 100% DOS REQUISITOS (RF-01 a RF-08, RNF-01 a RNF-03) VALIDADOS');
-console.log('================================================================\n');
-
-if (passedCount === testSuites.length) {
-  process.exit(0);
-} else {
-  process.exit(1);
-}
+main();
