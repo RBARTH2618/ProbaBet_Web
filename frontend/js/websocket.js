@@ -44,6 +44,56 @@ function updateBalanceUI(novoSaldo) {
 }
 
 /**
+ * Sistema de Notificações Toast Moderno (Substitui alerts nativos)
+ */
+window.showToast = function(title, message, type = 'info', duration = 4000) {
+  let container = document.getElementById('probabetToastContainer');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'probabetToastContainer';
+    container.className = 'probabet-toast-container';
+    document.body.appendChild(container);
+  }
+
+  const icons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+
+  const toast = document.createElement('div');
+  toast.className = `probabet-toast toast-${type}`;
+  toast.innerHTML = `
+    <span class="probabet-toast-icon">${icons[type] || 'ℹ️'}</span>
+    <div class="probabet-toast-content">
+      <div class="probabet-toast-title">${title}</div>
+      <div class="probabet-toast-message">${message}</div>
+    </div>
+    <button class="probabet-toast-close" title="Fechar">&times;</button>
+  `;
+
+  container.appendChild(toast);
+
+  // Animação suave de entrada
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+
+  const removeToast = () => {
+    toast.classList.remove('show');
+    setTimeout(() => {
+      if (toast.parentElement) toast.remove();
+    }, 350);
+  };
+
+  toast.querySelector('.probabet-toast-close').onclick = removeToast;
+  if (duration > 0) {
+    setTimeout(removeToast, duration);
+  }
+};
+
+/**
  * Conecta e gerencia o ciclo de vida do WebSocket
  */
 function initWebSocket() {
@@ -219,7 +269,9 @@ function handleServerEvent(payload) {
         const currentOffer = activeBetsMap.get(payload.betId)?.cashoutValue || 0;
         btnRej.innerHTML = `<span>Encerrar Aposta</span> <span class="cashout-offer-val">R$ ${currentOffer.toFixed(2)}</span>`;
       }
-      alert(`❌ CASH OUT REJEITADO:\n${payload.message}`);
+      if (typeof window.showToast === 'function') {
+        window.showToast('Cash Out Rejeitado', payload.message, 'error', 5000);
+      }
       break;
 
     case 'BET_SETTLED':

@@ -551,7 +551,9 @@
       const stake = parseFloat(document.getElementById('slipStakeInput').value) || 0;
 
       if (stake <= 0) {
-        alert('Informe um valor de aposta válido.');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Valor Inválido', 'Informe um valor de aposta maior que zero.', 'warning');
+        }
         return;
       }
 
@@ -658,7 +660,9 @@
         btn.disabled = false;
         btn.textContent = 'Confirmar Aposta (PLACE_BET)';
       }
-      alert(`❌ Aposta rejeitada pelo servidor:\n${e.detail.message}`);
+      if (typeof window.showToast === 'function') {
+        window.showToast('Aposta Rejeitada', e.detail.message || 'Não foi possível confirmar a aposta.', 'error', 5000);
+      }
     });
 
     // Inicia na partida configurada

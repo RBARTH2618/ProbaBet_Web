@@ -370,7 +370,9 @@
       const stake = parseFloat(document.getElementById('stakeInput').value) || 0;
 
       if (stake <= 0) {
-        alert('Informe um valor de aposta maior que zero.');
+        if (typeof window.showToast === 'function') {
+          window.showToast('Valor Inválido', 'Informe um valor de aposta maior que zero.', 'warning');
+        }
         return;
       }
 
@@ -388,6 +390,12 @@
       });
     }
 
+    function closeTicketModal() {
+      const modal = document.getElementById('ticketModal');
+      if (modal) modal.style.display = 'none';
+      clearBetSlip();
+    }
+
     window.onBetConfirmed = function(payload) {
       const btn = document.getElementById('btnPlaceBet');
       if (btn) {
@@ -395,7 +403,24 @@
         btn.textContent = 'Confirmar Aposta';
       }
 
-      alert(`✅ APOSTA CONFIRMADA!\nBilhete: #${payload.bet?.idAposta}\nPartida: ${payload.bet?.partidaNome}\nSeleção: ${payload.bet?.selecao} (@ ${payload.bet?.oddMomento})\nValor: R$ ${payload.bet?.valorApostado?.toFixed(2)}\nRetorno Potencial: R$ ${payload.bet?.retornoPotencial?.toFixed(2)}\nNovo Saldo: R$ ${payload.novoSaldo?.toFixed(2)}`);
+      // Exibe Comprovante Digital elegante na interface
+      const ticketIdEl = document.getElementById('modalTicketId');
+      const ticketMatchEl = document.getElementById('modalTicketMatch');
+      const ticketSelEl = document.getElementById('modalTicketSelection');
+      const ticketStakeEl = document.getElementById('modalTicketStake');
+      const ticketReturnEl = document.getElementById('modalTicketReturn');
+      const modalEl = document.getElementById('ticketModal');
+
+      if (ticketIdEl) ticketIdEl.textContent = `#${payload.bet?.idAposta || payload.bet?.id_aposta || '1'}`;
+      if (ticketMatchEl) ticketMatchEl.textContent = payload.bet?.partidaNome || window.currentSelection?.matchTitle || '-';
+      if (ticketSelEl) ticketSelEl.textContent = `${payload.bet?.selecao || window.currentSelection?.option} (@ ${payload.bet?.oddMomento || window.currentSelection?.odd})`;
+      if (ticketStakeEl) ticketStakeEl.textContent = `R$ ${payload.bet?.valorApostado?.toFixed(2)}`;
+      if (ticketReturnEl) ticketReturnEl.textContent = `R$ ${payload.bet?.retornoPotencial?.toFixed(2)}`;
+      if (modalEl) modalEl.style.display = 'flex';
+
+      if (typeof window.showToast === 'function') {
+        window.showToast('Aposta Confirmada!', `Bilhete #${payload.bet?.idAposta || payload.bet?.id_aposta} registrado com sucesso!`, 'success');
+      }
 
       clearBetSlip();
     };
@@ -407,7 +432,9 @@
         btn.textContent = 'Confirmar Aposta';
       }
 
-      alert(`❌ APOSTA REJEITADA:\n${payload.message}`);
+      if (typeof window.showToast === 'function') {
+        window.showToast('Aposta Rejeitada', payload.message || 'Não foi possível confirmar a aposta.', 'error', 5000);
+      }
     };
 
     function resetSimulation() {
@@ -437,6 +464,28 @@
       <div id="goalPopupScore" class="goal-popup-score">-</div>
       <div class="goal-popup-status">
         <span>🔒</span> Mercado Temporariamente Suspenso (4s)
+      </div>
+  <!-- MODAL DE COMPROVANTE DE APOSTA (BET_CONFIRMED) -->
+  <div id="ticketModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--bg-card); border: 1px solid var(--accent-green); border-radius: var(--radius-md); padding: 1.75rem; max-width: 420px; width: 90%; box-shadow: 0 0 30px rgba(0, 230, 118, 0.25);">
+      <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+        <span style="font-size: 1.5rem;">✅</span>
+        <h3 style="font-size: 1.2rem; color: #fff;">Aposta Confirmada!</h3>
+      </div>
+      <div style="background: rgba(0,0,0,0.3); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem; font-size: 0.88rem; line-height: 1.6;">
+        <div><strong>Bilhete:</strong> <span id="modalTicketId" style="color: var(--accent-gold); font-family: monospace;">#0</span></div>
+        <div><strong>Partida:</strong> <span id="modalTicketMatch">-</span></div>
+        <div><strong>Seleção:</strong> <span id="modalTicketSelection">-</span></div>
+        <div><strong>Valor Apostado:</strong> <span id="modalTicketStake" style="color: var(--accent-green);">R$ 0,00</span></div>
+        <div><strong>Retorno Potencial:</strong> <span id="modalTicketReturn" style="color: var(--accent-gold); font-weight: 700;">R$ 0,00</span></div>
+      </div>
+      <div style="display: flex; gap: 0.75rem;">
+        <button onclick="closeTicketModal()" style="flex: 1; background: rgba(255,255,255,0.08); border: 1px solid var(--border-color); color: #fff; padding: 0.6rem; border-radius: var(--radius-sm); font-weight: 700; cursor: pointer;">
+          Nova Aposta
+        </button>
+        <a href="tela3-cashout.html" style="flex: 1; text-align: center; background: var(--accent-green); border: none; color: #000; text-decoration: none; padding: 0.6rem; border-radius: var(--radius-sm); font-weight: 800; font-size: 0.88rem;">
+          Ver Carteira
+        </a>
       </div>
     </div>
   </div>
